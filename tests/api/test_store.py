@@ -3,7 +3,7 @@ from httpx import AsyncClient
 
 
 @pytest.mark.anyio
-@pytest.mark.order(2)
+@pytest.mark.order(3)
 async def test_shouldnt_create_store_without_seller(client: AsyncClient):
     request = await client.post(
         "/stores/",
@@ -15,7 +15,7 @@ async def test_shouldnt_create_store_without_seller(client: AsyncClient):
     assert request.status_code == 403
 
 @pytest.mark.anyio
-@pytest.mark.order(3)
+@pytest.mark.order(4)
 async def test_should_create_store_with_seller(client: AsyncClient):
 
     # authenticate seller

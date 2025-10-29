@@ -3,7 +3,7 @@ from httpx import AsyncClient
 
 
 @pytest.mark.anyio
-@pytest.mark.order(4)
+@pytest.mark.order(5)
 async def test_should_create_customer(client: AsyncClient):
     request = await client.post(
         "/customers/",
@@ -20,7 +20,7 @@ async def test_should_create_customer(client: AsyncClient):
     assert response["access_token"] is not None
 
 @pytest.mark.anyio
-@pytest.mark.order(5)
+@pytest.mark.order(6)
 async def test_shouldnt_create_customer_with_same_email(client: AsyncClient):
     request = await client.post(
         "/customers/",
