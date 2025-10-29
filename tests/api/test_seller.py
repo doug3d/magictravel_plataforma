@@ -3,7 +3,7 @@ from httpx import AsyncClient
 
 
 @pytest.mark.anyio
-@pytest.mark.order(2)
+@pytest.mark.order(1)
 async def test_should_create_seller(client: AsyncClient):
     request = await client.post(
         "/sellers/",

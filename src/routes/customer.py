@@ -1,4 +1,5 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
+from tortoise.exceptions import IntegrityError
 from src.models import Customer, CustomerAuth
 from src.dtos.customer import CustomerSchema, CustomerAuthSchema
 from src.utils import generate_credentials, authenticate_user
@@ -16,9 +17,16 @@ async def show():
 
 @router.post("/")
 async def store(body: CustomerSchema):
-    customer = await Customer.create(**body.model_dump())
-    response = await generate_credentials(customer, 'customer')
-    return response
+    try:
+        customer = await Customer.create(
+            name=body.name,
+            email=body.email,
+            password=body.password,
+        )
+        response = await generate_credentials(customer, 'customer')
+        return response
+    except IntegrityError as e:
+        raise HTTPException(status_code=400, detail="Email already registered")
 
 @router.post("/auth")
 async def authenticate(body: CustomerAuthSchema):

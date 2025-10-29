@@ -16,7 +16,11 @@ async def show():
 
 @router.post("/")
 async def store(body: SellerSchema):
-    seller = await Seller.create(**body.model_dump())
+    seller = await Seller.create(
+        name=body.name,
+        email=body.email,
+        password=body.password,
+    )
     response = await generate_credentials(seller, 'seller')
     return response
 

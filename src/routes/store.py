@@ -17,6 +17,9 @@ async def show(request: Request):
 @router.post("/")
 @seller_required
 async def store(request: Request, body: StoreSchema):
-    store = await Store.create(**body.model_dump(), seller_id=request.current_user.id)
+    store = await Store.create(
+        seller_id=request.current_user.id,
+        name=body.name, 
+    )
     return store
 
