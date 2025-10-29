@@ -1,1 +1,1 @@
-fastapi dev src/application.py
+poetry run fastapi dev src/application.py

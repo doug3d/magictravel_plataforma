@@ -52,7 +52,7 @@ class Product(Model):
     id = fields.IntField(primary_key=True)
     name = fields.CharField(max_length=255)
     description = fields.TextField()
-    price = fields.IntegerField()
+    price = fields.IntField()
     external_id = fields.TextField() # from maria api
     store = fields.ForeignKeyField("models.Store", related_name='store_product')
     created_at = fields.DatetimeField(auto_now_add=True)
@@ -66,5 +66,5 @@ class OrderItem(Model):
     id = fields.IntField(primary_key=True)
     order = fields.ForeignKeyField("models.Order", related_name='orderitem_order')
     product = fields.ForeignKeyField("models.Order", related_name='product_order')
-    price = fields.IntegerField()
-    amount = fields.IntegerField(default=1)
+    price = fields.IntField()
+    amount = fields.IntField(default=1)

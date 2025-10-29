@@ -9,12 +9,12 @@ async def test_should_create_customer(client: AsyncClient):
         "/customers/",
         json={
             "name": "Guilherme",
-            "email": "guilherme@obscure.network",
+            "email": "guilherme@gmail.com",
             "password": "123456",
         },
     )
     response = request.json()
     assert request.status_code == 200
-    assert response["seller_id"] == 1
+    assert response["customer_id"] == 1
     assert response["name"] == "Guilherme"
     assert response["access_token"] is not None

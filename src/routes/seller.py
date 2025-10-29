@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from src.models import Seller
-from src.dtos.seller import SellerSchema
-from src.utils import generate_credentials
+from src.dtos.seller import SellerSchema, SellerAuthSchema
+from src.utils import generate_credentials, authenticate_user
 
 router = APIRouter(
     prefix="/sellers",
@@ -20,3 +20,8 @@ async def store(body: SellerSchema):
     response = await generate_credentials(seller, 'seller')
     return response
 
+
+@router.post("/auth")
+async def authenticate(body: SellerAuthSchema):
+    response = await authenticate_user(body, 'seller')
+    return response
