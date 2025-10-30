@@ -57,14 +57,29 @@ class Product(Model):
     store = fields.ForeignKeyField("models.Store", related_name='store_product')
     created_at = fields.DatetimeField(auto_now_add=True)
 
+
+class Cart(Model):
+    id = fields.IntField(primary_key=True)
+    customer = fields.ForeignKeyField("models.Customer", related_name='cart_customer')
+    created_at = fields.DatetimeField(auto_now_add=True)
+
+class CartItem(Model):
+    id = fields.IntField(primary_key=True)
+    cart = fields.ForeignKeyField("models.Cart", related_name='cartitem_cart')
+    product = fields.ForeignKeyField("models.Product", related_name='product_cartitem')
+    amount = fields.IntField(default=1)
+    created_at = fields.DatetimeField(auto_now_add=True)
+
 class Order(Model):
     id = fields.IntField(primary_key=True)
     status = fields.CharField(max_length=255, choices=ORDER_STATUS, default='created')
+    customer = fields.ForeignKeyField("models.Customer", related_name='order_customer')
+    total_price = fields.IntField()
     created_at = fields.DatetimeField(auto_now_add=True)
 
 class OrderItem(Model):
     id = fields.IntField(primary_key=True)
     order = fields.ForeignKeyField("models.Order", related_name='orderitem_order')
-    product = fields.ForeignKeyField("models.Order", related_name='product_order')
+    product = fields.ForeignKeyField("models.Product", related_name='product_orderitem')
     price = fields.IntField()
     amount = fields.IntField(default=1)
