@@ -1,5 +1,5 @@
 from functools import wraps
-from src.models import CustomerAuth, SellerAuth
+from src.models import CustomerAuth, SellerAuth, Store
 from fastapi import HTTPException, Header, Request
 import datetime
 
@@ -42,6 +42,20 @@ def seller_required(func):
         access_token = request.headers.get("Seller-Authorization", False)
         user = await valid_access_token(access_token, SellerAuth)
         request.current_user = user
+
+        return await func(*args, **kwargs)
+
+    return wrapper
+
+def store_required(func):
+    @wraps(func)
+    async def wrapper(*args, **kwargs):
+        request = get_request(kwargs)
+        credential = request.headers.get("Store-Credential", False)
+        store = await Store.get(credential=credential)
+        if not store:
+            raise HTTPException(status_code=403, detail="Store credential is invalid")
+        request.current_store = store
 
         return await func(*args, **kwargs)
 

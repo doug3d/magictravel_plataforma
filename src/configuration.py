@@ -1,7 +1,7 @@
 import os
 from fastapi import FastAPI
 from tortoise.contrib.fastapi import register_tortoise
-from src.routes import seller, customer, store
+from src.routes import seller, customer, store, cart, order
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -36,3 +36,5 @@ def configure_routes(application: FastAPI):
     application.include_router(seller.router)
     application.include_router(customer.router)
     application.include_router(store.router)
+    application.include_router(cart.router)
+    application.include_router(order.router)

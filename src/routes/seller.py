@@ -11,10 +11,6 @@ router = APIRouter(
 )
 
 
-@router.get("/")
-async def show():
-    return await Seller.all()
-
 @router.post("/")
 async def store(body: SellerSchema):
     try:

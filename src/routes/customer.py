@@ -1,8 +1,9 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from tortoise.exceptions import IntegrityError
 from src.models import Customer, CustomerAuth
 from src.dtos.customer import CustomerSchema, CustomerAuthSchema
 from src.utils import generate_credentials, authenticate_user
+from src.authentication import store_required
 
 router = APIRouter(
     prefix="/customers",
@@ -11,25 +12,24 @@ router = APIRouter(
 )
 
 
-@router.get("/")
-async def show():
-    return await Customer.all()
-
 @router.post("/")
-async def store(body: CustomerSchema):
-    try:
-        customer = await Customer.create(
-            name=body.name,
-            email=body.email,
-            password=body.password,
-        )
-        response = await generate_credentials(customer, 'customer')
-        return response
-    except IntegrityError as e:
+@store_required
+async def store(request: Request, body: CustomerSchema):
+    if await Customer.filter(store_id=request.current_store.id, email=body.email).first():
         raise HTTPException(status_code=400, detail="Email already registered")
 
+    customer = await Customer.create(
+        store_id=request.current_store.id,
+        name=body.name,
+        email=body.email,
+        password=body.password,
+    )
+    response = await generate_credentials(customer, 'customer')
+    return response
+
 @router.post("/auth")
-async def authenticate(body: CustomerAuthSchema):
-    response = await authenticate_user(body, 'customer')
+@store_required
+async def authenticate(request: Request, body: CustomerAuthSchema):
+    response = await authenticate_user(body, 'customer', request.current_store.id)
     return response
 

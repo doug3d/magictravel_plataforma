@@ -3,7 +3,8 @@ from src.models import Store
 from src.models import Product
 from src.dtos.store import StoreSchema
 from src.dtos.product import ProductSchema
-from src.authentication import seller_required
+from src.authentication import seller_required, store_required
+import uuid
 
 router = APIRouter(
     prefix="/stores",
@@ -12,17 +13,13 @@ router = APIRouter(
 )
 
 
-@router.get("/")
-@seller_required
-async def show(request: Request):
-    return await Store.all()
-
 @router.post("/")
 @seller_required
 async def store(request: Request, body: StoreSchema):
     response = await Store.create(
         seller_id=request.current_user.id,
         name=body.name, 
+        credential=str(uuid.uuid4().hex)[:250],
     )
 
     return {
@@ -33,19 +30,17 @@ async def store(request: Request, body: StoreSchema):
 
 @router.post("/{store_id}/products")
 @seller_required
-async def store_product(request: Request, store_id: int, body: ProductSchema):
+@store_required
+async def add_product(request: Request, store_id: int, body: ProductSchema):
 
-    store = await Store.get(id=store_id)
-    if not store:
-        raise HTTPException(status_code=404, detail="Store not found")
 
-    seller_id = await store.seller
+    seller = await request.current_store.seller
 
-    if store.seller_id != request.current_user.id:
+    if seller.id != request.current_user.id:
         raise HTTPException(status_code=403, detail="Forbidden")
 
     response = await Product.create(
-        store_id=store_id,
+        store_id=request.current_store.id,
         name=body.name,
         description=body.description,
         price=body.price,
@@ -53,3 +48,14 @@ async def store_product(request: Request, store_id: int, body: ProductSchema):
     )
 
     return response
+
+
+@router.get("/{store_id}/get-credential")
+@seller_required
+async def get_credential(request: Request):
+    store = await Store.get(seller_id=request.current_user.id)
+    if not store:
+        raise HTTPException(status_code=404, detail="Store not found")
+    return {
+        'credential': store.credential,
+    }

@@ -10,14 +10,26 @@ ORDER_STATUS = (
     ('cancelled', 'Cancelado'),
 )
 
+CART_STATUS = (
+    ('active', 'Ativo'),
+    ('abandoned', 'Abandonado'),
+)
+
 AUTH_STATUS = (
     ('valid', 'Válido'),
     ('invalidated', 'Inválido'),
 )
+
+PRODUCT_STATUS = (
+    ('active', 'Ativo'),
+    ('inactive', 'Inativo'),
+)
+
 class Store(Model):
     id = fields.IntField(primary_key=True)
     name = fields.CharField(max_length=255)
     seller = fields.ForeignKeyField("models.Seller", related_name='seller_owner')
+    credential = fields.CharField(max_length=255)
     created_at = fields.DatetimeField(auto_now_add=True)
 
 class Seller(Model):
@@ -36,6 +48,7 @@ class SellerAuth(Model):
 
 class Customer(Model):
     id = fields.IntField(primary_key=True)
+    store = fields.ForeignKeyField("models.Store", related_name='store_customer')
     name = fields.CharField(max_length=255)
     email = fields.CharField(unique=True, max_length=255)
     password = fields.CharField(max_length=255)
@@ -50,6 +63,7 @@ class CustomerAuth(Model):
 
 class Product(Model):
     id = fields.IntField(primary_key=True)
+    status = fields.CharField(max_length=255, choices=PRODUCT_STATUS, default='active')
     name = fields.CharField(max_length=255)
     description = fields.TextField()
     price = fields.IntField()
@@ -60,6 +74,8 @@ class Product(Model):
 
 class Cart(Model):
     id = fields.IntField(primary_key=True)
+    store = fields.ForeignKeyField("models.Store", related_name='store_cart')
+    status = fields.CharField(max_length=255, choices=CART_STATUS, default='active')
     customer = fields.ForeignKeyField("models.Customer", related_name='cart_customer')
     created_at = fields.DatetimeField(auto_now_add=True)
 
@@ -72,9 +88,10 @@ class CartItem(Model):
 
 class Order(Model):
     id = fields.IntField(primary_key=True)
+    store = fields.ForeignKeyField("models.Store", related_name='store_order')
     status = fields.CharField(max_length=255, choices=ORDER_STATUS, default='created')
     customer = fields.ForeignKeyField("models.Customer", related_name='order_customer')
-    total_price = fields.IntField()
+    code = fields.CharField(max_length=255)
     created_at = fields.DatetimeField(auto_now_add=True)
 
 class OrderItem(Model):
