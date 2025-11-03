@@ -52,6 +52,8 @@ def store_required(func):
     async def wrapper(*args, **kwargs):
         request = get_request(kwargs)
         credential = request.headers.get("Store-Credential", False)
+        if not credential:
+            raise HTTPException(status_code=403, detail="Store credential is invalid")
         store = await Store.get(credential=credential)
         if not store:
             raise HTTPException(status_code=403, detail="Store credential is invalid")

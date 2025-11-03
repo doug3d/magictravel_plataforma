@@ -1,8 +1,9 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from tortoise.exceptions import IntegrityError
 from src.models import Seller
 from src.dtos.seller import SellerSchema, SellerAuthSchema
 from src.utils import generate_credentials, authenticate_user
+from src.authentication import store_required
 
 router = APIRouter(
     prefix="/sellers",
