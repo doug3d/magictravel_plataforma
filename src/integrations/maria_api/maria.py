@@ -1,7 +1,7 @@
 import os
 import httpx
 from typing import List
-from .dto import Park, ParkProduct
+from .dto import Park, ParkProduct, ParkProductDetail
 
 
 class MariaApi:
@@ -32,11 +32,11 @@ class MariaApi:
             params["numChildren"] = num_children
         if is_special:
             params["isSpecial"] = is_special
-        r = httpx.get(f"{self.base_endpoint}/parks/{park_code}/products/", params=params)
+        r = httpx.get(f"{self.base_endpoint}/parks/{park_code}/products", params=params)
         response = r.json()
         return [ParkProduct(**item) for item in response]
 
-    def get_park_product_detail(self, park_code: str, product_code: str) -> ParkProduct:
-        r = httpx.get(f"{self.base_endpoint}/parks/{park_code}/products/{product_code}/")
+    def get_park_product_detail(self, park_code: str, product_code: str) -> ParkProductDetail:
+        r = httpx.get(f"{self.base_endpoint}/parks/{park_code}/products/{product_code}")
         response = r.json()
-        return ParkProduct(**response)
+        return ParkProductDetail(**response)
