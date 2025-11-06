@@ -28,7 +28,7 @@ async def get_park(request: Request, park_code: str):
 async def get_park_products(request: Request, park_code: str):
     maria_client = MariaApi()
     products = maria_client.get_park_products(park_code)
-    return products
+    return [product.model_dump(by_alias=False) for product in products]
 
 @router.get("/parks/{park_code}/products/{product_code}")
 @store_required
