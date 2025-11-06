@@ -9,7 +9,7 @@ class MariaApi:
         self.base_endpoint = os.getenv('MARIA_API_ENDPOINT')
 
     def get_parks(self, location: str = "FL") -> List[Park]:
-        r = httpx.get(f"{self.base_endpoint}/parks/", params={"location": location})
+        r = httpx.get(f"{self.base_endpoint}/parks/")
         response = r.json()
         return [Park(**item) for item in response]
 

@@ -1,19 +1,31 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Magic Store</title>
+    <title>{% block title %}Magic Marketplace - Ingressos para Parques{% endblock %}</title>
+    <link rel="stylesheet" href="/static/css/base.css">
     {% block styles %}
     {% endblock %}
 </head>
 <body>
+    <header>
+        <div class="header-content">
+            <a href="/" class="logo">🎢 Magic Marketplace</a>
+            <nav>
+                <a href="/">Parques</a>
+                <a href="/carrinho">🛒 Carrinho</a>
+                <a href="/minha-conta">👤 Minha Conta</a>
+            </nav>
+        </div>
+    </header>
 
-    {% block content %}
-    {% endblock %}
+    <main class="container">
+        {% block content %}
+        {% endblock %}
+    </main>
 
     {% block scripts %}
     {% endblock %}
-    
 </body>
 </html>

@@ -1,64 +1,479 @@
 {% extends "base.html" %}
 
-{% block content %}
-<h1>{{ park.name }}</h1>
-<p>{{ park.description }}</p>
-<hr/>
+{% block title %}{{ park.name }} - Ingressos - Magic Marketplace{% endblock %}
 
-<div class="filters">
-    <input type="date" id="forDate" value="2025-12-25">
-    <input type="number" id="numberDays" value="3">
-    <input type="number" id="numAdults" value="2">
-    <input type="number" id="numChildren" value="1">
-    <button id="filterButton">Filtrar</button>
-</div>
-
-<div class="products"></div>
-
+{% block styles %}
+<style>
+    .park-header {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+    }
+    
+    .park-description {
+        opacity: 0.95;
+        margin: 1rem 0;
+        line-height: 1.6;
+    }
+    
+    .park-location {
+        font-size: 0.95rem;
+        opacity: 0.9;
+    }
+    
+    .filters-card {
+        background: white;
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px var(--shadow);
+        margin-bottom: 2rem;
+    }
+    
+    .filters-card h3 {
+        margin-top: 0;
+        margin-bottom: 0.5rem;
+        color: var(--dark);
+    }
+    
+    .filters-subtitle {
+        color: var(--gray);
+        margin-bottom: 1.5rem;
+        font-size: 0.95rem;
+    }
+    
+    .required {
+        color: var(--danger);
+    }
+    
+    .filter-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .btn-filter {
+        width: 100%;
+        padding: 1rem;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .btn-filter:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    
+    .btn-filter:active {
+        transform: translateY(0);
+    }
+    
+    .btn-filter:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+    
+    .empty-state-initial {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px var(--shadow);
+    }
+    
+    .empty-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+    }
+    
+    .empty-state-initial h3 {
+        color: var(--dark);
+        margin-bottom: 0.5rem;
+    }
+    
+    .empty-state-initial p {
+        color: var(--gray);
+        max-width: 500px;
+        margin: 0 auto;
+    }
+    
+    .products-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    .product-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 8px var(--shadow);
+        transition: transform 0.2s, box-shadow 0.2s;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .product-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 16px var(--shadow-hover);
+    }
+    
+    .product-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 1rem;
+    }
+    
+    .product-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--dark);
+        margin: 0;
+        flex: 1;
+    }
+    
+    .product-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .badge-addon {
+        background: #f3e5f5;
+        color: #7b1fa2;
+    }
+    
+    .product-info {
+        margin-bottom: 1rem;
+        flex: 1;
+    }
+    
+    .info-row {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.5rem;
+        color: var(--gray);
+        font-size: 0.9rem;
+    }
+    
+    .info-row span:first-child {
+        margin-right: 0.5rem;
+    }
+    
+    .product-price {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        color: white;
+        padding: 1rem;
+        border-radius: 8px;
+        text-align: center;
+        margin-bottom: 1rem;
+    }
+    
+    .price-label {
+        font-size: 0.8rem;
+        opacity: 0.9;
+        margin-bottom: 0.25rem;
+    }
+    
+    .price-value {
+        font-size: 2rem;
+        font-weight: 700;
+        margin: 0;
+    }
+    
+    .price-usd {
+        font-size: 0.85rem;
+        opacity: 0.9;
+        margin-top: 0.25rem;
+    }
+    
+    .btn-add-cart {
+        width: 100%;
+        padding: 0.875rem;
+        background: var(--secondary);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+    
+    .btn-add-cart:hover {
+        background: var(--secondary-dark);
+    }
+    
+    @media (max-width: 768px) {
+        .products-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .filter-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
 {% endblock %}
 
+{% block content %}
+<div class="park-header">
+    <h1>{{ park.name }}</h1>
+    <p class="park-description">{{ park.description }}</p>
+    <p class="park-location">📍 {{ park.location.city }}, {{ park.location.state }}</p>
+</div>
+
+<div class="filters-card">
+    <h3>🔍 Buscar Ingressos Disponíveis</h3>
+    <p class="filters-subtitle">Preencha os campos abaixo para encontrar os melhores ingressos para você</p>
+    <div class="filter-grid">
+        <div class="filter-item">
+            <label for="forDate">📅 Data da visita <span class="required">*</span></label>
+            <input type="date" id="forDate" required>
+        </div>
+        <div class="filter-item">
+            <label for="numAdults">👨 Adultos <span class="required">*</span></label>
+            <input type="number" id="numAdults" min="1" max="20" value="2" required>
+        </div>
+        <div class="filter-item">
+            <label for="numChildren">👶 Crianças</label>
+            <input type="number" id="numChildren" min="0" max="20" value="0">
+        </div>
+        <div class="filter-item">
+            <label for="numberDays">🎫 Dias de ingresso (opcional)</label>
+            <input type="number" id="numberDays" min="1" max="14" placeholder="Deixe em branco para ver todas">
+        </div>
+    </div>
+    <button id="filterButton" class="btn-filter">🔎 Buscar Ingressos</button>
+</div>
+
+<div id="loading" class="loading" style="display: none;">
+    <div class="spinner"></div>
+    <p>Buscando ingressos disponíveis...</p>
+</div>
+
+<div id="emptyState" class="empty-state-initial">
+    <div class="empty-icon">🎢</div>
+    <h3>Pronto para começar?</h3>
+    <p>Preencha os filtros acima e clique em "Buscar Ingressos" para ver todas as opções disponíveis</p>
+</div>
+
+<div class="products-grid"></div>
+{% endblock %}
 
 {% block scripts %}
 <script>
     (async()=>{
         const getProducts = async (forDate, numberDays, numAdults, numChildren) => {
-            const products = await fetch('/maria/parks/{{park.code}}/products', {
+            const url = new URL('/maria/parks/{{park.code}}/products', window.location.origin);
+            url.searchParams.append('forDate', forDate);
+            if (numberDays) url.searchParams.append('numberDays', numberDays);
+            url.searchParams.append('numAdults', numAdults);
+            url.searchParams.append('numChildren', numChildren);
+            
+            const response = await fetch(url, {
                 headers: {
                     'Store-Credential': '89c6579682c5435ba08d2905817d1bce'
-                },
-                params: {
-                    forDate: forDate,
-                    numberDays: numberDays,
-                    numAdults: numAdults,
-                    numChildren: numChildren
                 }
             });
-            return products.json();
+            return response.json();
         }
-            
+        
+        const formatPrice = (amount) => {
+            return parseFloat(amount).toLocaleString('pt-BR', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
+        function parkCodeToName(parkCode, parkCity) {
+            if (parkCity != 'Orlando') {
+                return parkCode;
+            }
+            const parkNames = {
+                'USF': 'Universal Studios Florida',
+                'IOA': "Universal's Islands of Adventure",
+                'UIA': "Universal's Islands of Adventure",
+                'VBP': "Universal's Volcano Bay",
+                'EPIC': "Universal's Epic Universe",
+            };
+            const standardizedCode = parkCode?.trim().toUpperCase();
+
+            if (!parkNames[standardizedCode]) {
+                return parkCode;
+            }
+
+            return parkNames[standardizedCode];
+        }
+        
+        const getDaysText = (days) => {
+            if (days === 0) return 'Uso único';
+            if (days === 1) return '1 dia';
+            return `${days} dias`;
+        }
+        
         const renderProducts = (products) => {
-            console.log(products);
-            const productsContainer = document.querySelector('.products');
-            productsContainer.innerHTML = products.map((product) => {
-                return `
-                    <div class="product">
-                        <h2>${product.ticket_name}</h2>
-                        <p>${product.description}</p>
-                        <a href="/parks/${product.code}">Ver produto</a>
+            const productsContainer = document.querySelector('.products-grid');
+            
+            if (!products || products.length === 0) {
+                productsContainer.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1/-1;">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 80px; height: 80px; margin: 0 auto 1rem; opacity: 0.5;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+                        </svg>
+                        <h3>Nenhum produto encontrado</h3>
+                        <p>Tente ajustar os filtros acima</p>
                     </div>
-                `
+                `;
+                return;
+            }
+            
+            productsContainer.innerHTML = products.map((product) => {
+                const badges = [];
+                
+                // Badge do tipo de produto
+                const productKind = product.extensions.product_kind;
+                if (productKind === 'admission') {
+                    badges.push('<span class="badge badge-primary">Ingresso</span>');
+                } else if (productKind === 'addon') {
+                    badges.push('<span class="badge badge-addon">Adicional</span>');
+                }
+                
+                // Badge multi-dias
+                if (product.is_multi_days) {
+                    badges.push('<span class="badge badge-success">Multi-dias</span>');
+                }
+                
+                // Badge park to park
+                if (product.is_park_to_park) {
+                    badges.push('<span class="badge badge-warning">Park-to-Park</span>');
+                }
+                
+                // Badge dated
+                if (product.is_dated) {
+                    badges.push('<span class="badge badge-primary">Data Específica</span>');
+                }
+                
+                const days = product.extensions.number_days;
+                const parks = product.extensions.number_parks;
+                
+                return `
+                    <div class="product-card" data-product-id="${product.code}">
+                        <div class="product-header">
+                            <h3 class="product-title">${product.ticket_name}</h3>
+                        </div>
+                        
+                        <div class="product-badges">
+                            ${badges.join('')}
+                        </div>
+                        
+                        <div class="product-info">
+                            <div class="info-row">
+                                <span>🎢</span>
+                                <span><strong>${parkCodeToName(product.park_included, product.park_location.city)}</strong></span>
+                            </div>
+                            
+                            ${days > 0 ? `
+                                <div class="info-row">
+                                    <span>📅</span>
+                                    <span>${getDaysText(days)}</span>
+                                </div>
+                            ` : ''}
+                            
+                            ${parks > 0 ? `
+                                <div class="info-row">
+                                    <span>🎡</span>
+                                    <span>${parks} parque${parks > 1 ? 's' : ''}</span>
+                                </div>
+                            ` : ''}
+                            
+                            <div class="info-row">
+                                <span>🎫</span>
+                                <span>${product.extensions.ticket_type || 'Ticket'}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="product-price">
+                            <div class="price-label">Preço total a partir de</div>
+                            <div class="price-value">
+                                ${product.prices.total.usdbrl.symbol} ${formatPrice(product.prices.total.usdbrl.amount)}
+                            </div>
+                            <div class="price-usd">
+                                ${product.prices.total.original.symbol}${formatPrice(product.prices.total.original.amount)} USD
+                            </div>
+                        </div>
+                        
+                        <button class="btn-add-cart" onclick="addToCart('${product.code}')">
+                            🛒 Adicionar ao Carrinho
+                        </button>
+                    </div>
+                `;
             }).join('');
         }
 
         const filterButton = document.querySelector('#filterButton');
+        const loading = document.querySelector('#loading');
+        const emptyState = document.querySelector('#emptyState');
+        const productsGrid = document.querySelector('.products-grid');
+        
         filterButton.addEventListener('click', async () => {
             const forDate = document.querySelector('#forDate').value;
-            const numberDays = document.querySelector('#numberDays').value;
+            const numberDays = document.querySelector('#numberDays').value || '';
             const numAdults = document.querySelector('#numAdults').value;
             const numChildren = document.querySelector('#numChildren').value;
-            const products = await getProducts(forDate, numberDays, numAdults, numChildren);
-            renderProducts(products);
+            
+            // Validação
+            if (!forDate) {
+                alert('Por favor, selecione a data da visita');
+                return;
+            }
+            
+            if (!numAdults || numAdults < 1) {
+                alert('Por favor, informe o número de adultos (mínimo 1)');
+                return;
+            }
+            
+            // Esconder empty state e mostrar loading
+            emptyState.style.display = 'none';
+            loading.style.display = 'block';
+            productsGrid.innerHTML = '';
+            filterButton.disabled = true;
+            
+            try {
+                const products = await getProducts(forDate, numberDays, numAdults, numChildren);
+                renderProducts(products);
+            } catch (error) {
+                console.error('Erro ao carregar produtos:', error);
+                productsGrid.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1/-1;">
+                        <h3>❌ Erro ao carregar produtos</h3>
+                        <p>Tente novamente mais tarde</p>
+                    </div>
+                `;
+            } finally {
+                loading.style.display = 'none';
+                filterButton.disabled = false;
+            }
         });
+        
+        // Função para adicionar ao carrinho (placeholder)
+        window.addToCart = (productCode) => {
+            alert(`Produto ${productCode} adicionado ao carrinho!\n(Implementar integração com backend)`);
+        }
+        
+        // Definir data mínima (hoje)
+        const today = new Date().toISOString().split('T')[0];
+        document.querySelector('#forDate').setAttribute('min', today);
     })()
 </script>
 {% endblock %}

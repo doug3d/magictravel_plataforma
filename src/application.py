@@ -1,5 +1,6 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from src.configuration import configure_db, configure_routes
 from src.seed import seed_database
 
@@ -33,6 +34,9 @@ def create_application(fake_db=False):
     # Não executar seed em testes (fake_db=True)
     lifespan = create_lifespan(run_seed=not fake_db)
     app = FastAPI(lifespan=lifespan)
+
+    # Configurar arquivos estáticos
+    app.mount("/static", StaticFiles(directory="static"), name="static")
 
     configure_db(app, fake_db)
     configure_routes(app)

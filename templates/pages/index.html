@@ -1,48 +1,213 @@
 {% extends "base.html" %}
 
-{% block content %}
-<h1>Magic Store</h1>
-<p>Selecione o parque para ver os ingressos e pacotes disponiveis.</p>
+{% block title %}Escolha seu Parque - Magic Marketplace{% endblock %}
 
-
-<div class="parks"></div>
-
+{% block styles %}
+<style>
+    .hero {
+        text-align: center;
+        padding: 3rem 1rem;
+        background: white;
+        border-radius: 16px;
+        margin-bottom: 3rem;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    }
+    
+    .hero h1 {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .hero p {
+        font-size: 1.2rem;
+        color: var(--gray);
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    .parks-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 2rem;
+    }
+    
+    .park-card {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px var(--shadow);
+        transition: transform 0.2s, box-shadow 0.2s;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .park-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 12px 24px var(--shadow-hover);
+    }
+    
+    .park-image {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .park-content {
+        padding: 1.5rem;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .park-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        color: var(--dark);
+    }
+    
+    .park-location {
+        color: var(--gray);
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .park-description {
+        color: var(--gray);
+        margin-bottom: 1.5rem;
+        flex: 1;
+        line-height: 1.6;
+    }
+    
+    .park-attractions {
+        background: #f5f5f5;
+        padding: 0.75rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        font-size: 0.85rem;
+        color: var(--gray);
+    }
+    
+    .park-link {
+        padding: 1rem;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        color: white;
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: 600;
+        text-align: center;
+        transition: transform 0.2s;
+    }
+    
+    .park-link:hover {
+        transform: scale(1.02);
+    }
+    
+    @media (max-width: 768px) {
+        .hero h1 {
+            font-size: 2rem;
+        }
+        
+        .parks-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
 {% endblock %}
 
+{% block content %}
+<div class="hero">
+    <h1>🎢 Escolha seu Parque dos Sonhos</h1>
+    <p>Explore os melhores parques temáticos e encontre os ingressos perfeitos para sua viagem mágica!</p>
+</div>
+
+<div id="loading" class="loading" style="display: block;">
+    <div class="spinner"></div>
+    <p>Carregando parques disponíveis...</p>
+</div>
+
+<div class="parks-grid"></div>
+{% endblock %}
 
 {% block scripts %}
 <script>
     (async()=>{
         const getParks = async () => {
-            const parks = await fetch('/maria/parks', {
+            const response = await fetch('/maria/parks', {
                 headers: {
                     'Store-Credential': '89c6579682c5435ba08d2905817d1bce'
                 }
             });
-            return parks.json();
+            return response.json();
         }
 
         const getTranslations = (park, language_code) => {
-            return park.translations.find(translation => translation.language_code === language_code) || { name: park.name, description: park.description };
+            return park.translations.find(t => t.language_code === language_code) || null;
         }
             
         const renderParks = (parks) => {
-            console.log(parks);
-            const parksContainer = document.querySelector('.parks');
+            const loading = document.querySelector('#loading');
+            const parksContainer = document.querySelector('.parks-grid');
+            
+            loading.style.display = 'none';
+            
+            if (!parks || parks.length === 0) {
+                parksContainer.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1/-1;">
+                        <h3>Nenhum parque disponível no momento</h3>
+                        <p>Tente novamente mais tarde</p>
+                    </div>
+                `;
+                return;
+            }
+            
             parksContainer.innerHTML = parks.map((park) => {
                 const translation = getTranslations(park, 'pt');
+                const name = translation?.name || park.name;
+                const description = translation?.description || park.description;
+                
                 return `
-                    <div class="park">
-                        <h2>${translation.name || park.name}</h2>
-                        <p>${translation.description || park.description}</p>
-                        <a href="/parks/${park.code}">Ver produtos</a>
+                    <div class="park-card">
+                        <div class="park-content">
+                            <h2 class="park-title">${name}</h2>
+                            <div class="park-location">
+                                <span>📍</span>
+                                <span>${park.location.city}, ${park.location.state}</span>
+                            </div>
+                            <p class="park-description">${description}</p>
+                            <div class="park-attractions">
+                                <strong>🎡 Principais Atrações:</strong><br>
+                                ${park.attraction == 'general_admission' ? 'Todas':park.attraction}
+                            </div>
+                            <a href="/parks/${park.code}" class="park-link">
+                                Ver Ingressos Disponíveis →
+                            </a>
+                        </div>
                     </div>
-                `
+                `;
             }).join('');
         }
         
-        const parks = await getParks();
-        renderParks(parks);
+        try {
+            const parks = await getParks();
+            renderParks(parks);
+        } catch (error) {
+            console.error('Erro ao carregar parques:', error);
+            document.querySelector('#loading').innerHTML = `
+                <div class="empty-state">
+                    <h3>Erro ao carregar parques</h3>
+                    <p>Tente recarregar a página</p>
+                </div>
+            `;
+        }
     })()
 </script>
 {% endblock %}
