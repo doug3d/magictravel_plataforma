@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>{{ park.name }}</h1>
+<p>{{ park.description }}</p>
+<hr/>
+
+<div class="filters">
+    <input type="date" id="forDate" value="2025-12-25">
+    <input type="number" id="numberDays" value="3">
+    <input type="number" id="numAdults" value="2">
+    <input type="number" id="numChildren" value="1">
+    <button id="filterButton">Filtrar</button>
+</div>
+
+<div class="products"></div>
+
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+    (async()=>{
+        const getProducts = async (forDate, numberDays, numAdults, numChildren) => {
+            const products = await fetch('/maria/parks/{{park.code}}/products', {
+                headers: {
+                    'Store-Credential': '89c6579682c5435ba08d2905817d1bce'
+                },
+                params: {
+                    forDate: forDate,
+                    numberDays: numberDays,
+                    numAdults: numAdults,
+                    numChildren: numChildren
+                }
+            });
+            return products.json();
+        }
+            
+        const renderProducts = (products) => {
+            console.log(products);
+            const productsContainer = document.querySelector('.products');
+            productsContainer.innerHTML = products.map((product) => {
+                return `
+                    <div class="product">
+                        <h2>${product.ticket_name}</h2>
+                        <p>${product.description}</p>
+                        <a href="/parks/${product.code}">Ver produto</a>
+                    </div>
+                `
+            }).join('');
+        }
+
+        const filterButton = document.querySelector('#filterButton');
+        filterButton.addEventListener('click', async () => {
+            const forDate = document.querySelector('#forDate').value;
+            const numberDays = document.querySelector('#numberDays').value;
+            const numAdults = document.querySelector('#numAdults').value;
+            const numChildren = document.querySelector('#numChildren').value;
+            const products = await getProducts(forDate, numberDays, numAdults, numChildren);
+            renderProducts(products);
+        });
+    })()
+</script>
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Magic Store</h1>
+<p>Selecione o parque para ver os ingressos e pacotes disponiveis.</p>
+
+
+<div class="parks"></div>
+
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+    (async()=>{
+        const getParks = async () => {
+            const parks = await fetch('/maria/parks', {
+                headers: {
+                    'Store-Credential': '89c6579682c5435ba08d2905817d1bce'
+                }
+            });
+            return parks.json();
+        }
+
+        const getTranslations = (park, language_code) => {
+            return park.translations.find(translation => translation.language_code === language_code) || { name: park.name, description: park.description };
+        }
+            
+        const renderParks = (parks) => {
+            console.log(parks);
+            const parksContainer = document.querySelector('.parks');
+            parksContainer.innerHTML = parks.map((park) => {
+                const translation = getTranslations(park, 'pt');
+                return `
+                    <div class="park">
+                        <h2>${translation.name || park.name}</h2>
+                        <p>${translation.description || park.description}</p>
+                        <a href="/parks/${park.code}">Ver produtos</a>
+                    </div>
+                `
+            }).join('');
+        }
+        
+        const parks = await getParks();
+        renderParks(parks);
+    })()
+</script>
+{% endblock %}
