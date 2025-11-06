@@ -6,7 +6,7 @@ Bem-vindo à documentação do **Magic Marketplace**, um sistema de marketplace 
 
 ## 🗂️ Índice de Documentação
 
-### 1. [OVERVIEW.md](./OVERVIEW.md) - Visão Geral do Projeto
+### 1. [OVERVIEW.md](./docs/OVERVIEW.md) - Visão Geral do Projeto
 **Comece aqui se você é novo no projeto!**
 
 - Descrição e objetivo do sistema
@@ -16,7 +16,7 @@ Bem-vindo à documentação do **Magic Marketplace**, um sistema de marketplace 
 - Tecnologias utilizadas
 - Como executar o projeto
 
-### 2. [DATABASE_STRUCTURE.md](./DATABASE_STRUCTURE.md) - Estrutura do Banco de Dados
+### 2. [DATABASE_STRUCTURE.md](./docs/DATABASE_STRUCTURE.md) - Estrutura do Banco de Dados
 **Para entender o modelo de dados**
 
 - Diagrama ER completo
@@ -26,7 +26,7 @@ Bem-vindo à documentação do **Magic Marketplace**, um sistema de marketplace 
 - Consultas SQL comuns
 - Métricas e análises
 
-### 3. [API_ENDPOINTS.md](./API_ENDPOINTS.md) - Documentação da API
+### 3. [API_ENDPOINTS.md](./docs/API_ENDPOINTS.md) - Documentação da API
 **Para integrar com o backend**
 
 - Headers de autenticação
@@ -36,7 +36,7 @@ Bem-vindo à documentação do **Magic Marketplace**, um sistema de marketplace 
 - Fluxos completos
 - Dicas de implementação frontend
 
-### 4. [MARIA_API_INTEGRATION.md](./MARIA_API_INTEGRATION.md) - Integração Maria API
+### 4. [MARIA_API_INTEGRATION.md](./docs/MARIA_API_INTEGRATION.md) - Integração Maria API
 **Para entender a integração externa**
 
 - O que é Maria API
@@ -47,7 +47,7 @@ Bem-vindo à documentação do **Magic Marketplace**, um sistema de marketplace 
 - Estratégias de cache
 - Troubleshooting
 
-### 5. [PRODUCT_FLOW.md](./PRODUCT_FLOW.md) - Fluxo de Produtos (Lazy Loading)
+### 5. [PRODUCT_FLOW.md](./docs/PRODUCT_FLOW.md) - Fluxo de Produtos (Lazy Loading)
 **⭐ Conceito FUNDAMENTAL do sistema**
 
 - Problema e solução (lazy loading)
@@ -57,7 +57,7 @@ Bem-vindo à documentação do **Magic Marketplace**, um sistema de marketplace 
 - Considerações UI/UX
 - Monitoramento e métricas
 
-### 6. [AUTHENTICATION.md](./AUTHENTICATION.md) - Sistema de Autenticação
+### 6. [AUTHENTICATION.md](./docs/AUTHENTICATION.md) - Sistema de Autenticação
 **Para entender segurança e permissões**
 
 - Tipos de usuários (Seller, Customer)
@@ -68,7 +68,7 @@ Bem-vindo à documentação do **Magic Marketplace**, um sistema de marketplace 
 - Isolamento multi-tenant
 - Recomendações de segurança
 
-### 7. [TESTING.md](./TESTING.md) - Estratégia de Testes
+### 7. [TESTING.md](./docs/TESTING.md) - Estratégia de Testes
 **Para escrever e executar testes**
 
 - Estrutura de testes
@@ -79,6 +79,16 @@ Bem-vindo à documentação do **Magic Marketplace**, um sistema de marketplace 
 - Debugging
 - Dicas de performance
 
+### 8. [SEED_DATABASE.md](./docs/SEED_DATABASE.md) - 🌱 Seed do Banco de Dados
+**Para inicializar dados padrão**
+
+- O que é o seed
+- Execução automática no startup
+- Credenciais padrão (admin/admin)
+- Execução manual
+- Uso no desenvolvimento frontend
+- Customização
+
 ---
 
 ## 🎯 Guias por Persona
@@ -87,11 +97,11 @@ Bem-vindo à documentação do **Magic Marketplace**, um sistema de marketplace 
 
 **Leia nesta ordem:**
 
-1. [OVERVIEW.md](./OVERVIEW.md) - Entender o sistema
-2. [API_ENDPOINTS.md](./API_ENDPOINTS.md) - Integrar com backend
-3. [PRODUCT_FLOW.md](./PRODUCT_FLOW.md) - **CRÍTICO**: Entender fluxo de produtos
-4. [AUTHENTICATION.md](./AUTHENTICATION.md) - Implementar login/auth
-5. [MARIA_API_INTEGRATION.md](./MARIA_API_INTEGRATION.md) - Consumir catálogo
+1. [OVERVIEW.md](./docs/OVERVIEW.md) - Entender o sistema
+2. [API_ENDPOINTS.md](./docs/API_ENDPOINTS.md) - Integrar com backend
+3. [PRODUCT_FLOW.md](./docs/PRODUCT_FLOW.md) - **CRÍTICO**: Entender fluxo de produtos
+4. [AUTHENTICATION.md](./docs/AUTHENTICATION.md) - Implementar login/auth
+5. [MARIA_API_INTEGRATION.md](./docs/MARIA_API_INTEGRATION.md) - Consumir catálogo
 
 **Principais conceitos:**
 
@@ -119,12 +129,12 @@ headers: {
 
 **Leia nesta ordem:**
 
-1. [OVERVIEW.md](./OVERVIEW.md) - Visão geral
-2. [DATABASE_STRUCTURE.md](./DATABASE_STRUCTURE.md) - Modelo de dados
-3. [PRODUCT_FLOW.md](./PRODUCT_FLOW.md) - **CRÍTICO**: Lazy loading strategy
-4. [AUTHENTICATION.md](./AUTHENTICATION.md) - Sistema de auth
-5. [TESTING.md](./TESTING.md) - Escrever testes
-6. [MARIA_API_INTEGRATION.md](./MARIA_API_INTEGRATION.md) - Integração externa
+1. [OVERVIEW.md](./docs/OVERVIEW.md) - Visão geral
+2. [DATABASE_STRUCTURE.md](./docs/DATABASE_STRUCTURE.md) - Modelo de dados
+3. [PRODUCT_FLOW.md](./docs/PRODUCT_FLOW.md) - **CRÍTICO**: Lazy loading strategy
+4. [AUTHENTICATION.md](./docs/AUTHENTICATION.md) - Sistema de auth
+5. [TESTING.md](./docs/TESTING.md) - Escrever testes
+6. [MARIA_API_INTEGRATION.md](./docs/MARIA_API_INTEGRATION.md) - Integração externa
 
 **Principais conceitos:**
 
@@ -148,9 +158,9 @@ if not product:
 
 **Leia nesta ordem:**
 
-1. [OVERVIEW.md](./OVERVIEW.md) - Entender o negócio
-2. [PRODUCT_FLOW.md](./PRODUCT_FLOW.md) - **CRÍTICO**: Fluxo de produtos
-3. [API_ENDPOINTS.md](./API_ENDPOINTS.md) - Ver fluxos completos
+1. [OVERVIEW.md](./docs/OVERVIEW.md) - Entender o negócio
+2. [PRODUCT_FLOW.md](./docs/PRODUCT_FLOW.md) - **CRÍTICO**: Fluxo de produtos
+3. [API_ENDPOINTS.md](./docs/API_ENDPOINTS.md) - Ver fluxos completos
 
 **Principais conceitos:**
 
@@ -165,10 +175,10 @@ if not product:
 
 **Leia nesta ordem:**
 
-1. [OVERVIEW.md](./OVERVIEW.md) - Arquitetura
-2. [DATABASE_STRUCTURE.md](./DATABASE_STRUCTURE.md) - Índices e queries
-3. [MARIA_API_INTEGRATION.md](./MARIA_API_INTEGRATION.md) - Dependência externa
-4. [TESTING.md](./TESTING.md) - CI/CD
+1. [OVERVIEW.md](./docs/OVERVIEW.md) - Arquitetura
+2. [DATABASE_STRUCTURE.md](./docs/DATABASE_STRUCTURE.md) - Índices e queries
+3. [MARIA_API_INTEGRATION.md](./docs/MARIA_API_INTEGRATION.md) - Dependência externa
+4. [TESTING.md](./docs/TESTING.md) - CI/CD
 
 **Principais conceitos:**
 
@@ -208,16 +218,22 @@ DATABASE_URL=sqlite://db.sqlite3
 MARIA_API_ENDPOINT=http://localhost:8001
 ```
 
-### 3. Rodar Migrações
-
-```bash
-poetry run aerich upgrade
-```
-
-### 4. Executar Aplicação
+### 3. Executar Aplicação
 
 ```bash
 poetry run fastapi dev src/application.py
+```
+
+**🎉 Pronto!** O banco de dados será criado automaticamente e o seed executará:
+- ✅ Seller Admin (admin@magic.com / admin)
+- ✅ Loja "Magic Marketplace"
+
+As credenciais serão exibidas no console.
+
+### 4. (Opcional) Executar Seed Manualmente
+
+```bash
+poetry run python scripts/seed_db.py
 ```
 
 ### 5. Executar Testes
@@ -317,24 +333,24 @@ Vantagens:
 ### Buscar por Tópico
 
 **Autenticação:**
-- Headers: [API_ENDPOINTS.md](./API_ENDPOINTS.md)
-- Decoradores: [AUTHENTICATION.md](./AUTHENTICATION.md)
-- Testes: [TESTING.md](./TESTING.md)
+- Headers: [API_ENDPOINTS.md](./docs/API_ENDPOINTS.md)
+- Decoradores: [AUTHENTICATION.md](./docs/AUTHENTICATION.md)
+- Testes: [TESTING.md](./docs/TESTING.md)
 
 **Produtos:**
-- Lazy Loading: [PRODUCT_FLOW.md](./PRODUCT_FLOW.md)
-- API Endpoints: [API_ENDPOINTS.md](./API_ENDPOINTS.md)
-- Modelo de dados: [DATABASE_STRUCTURE.md](./DATABASE_STRUCTURE.md)
+- Lazy Loading: [PRODUCT_FLOW.md](./docs/PRODUCT_FLOW.md)
+- API Endpoints: [API_ENDPOINTS.md](./docs/API_ENDPOINTS.md)
+- Modelo de dados: [DATABASE_STRUCTURE.md](./docs/DATABASE_STRUCTURE.md)
 
 **Maria API:**
-- Integração: [MARIA_API_INTEGRATION.md](./MARIA_API_INTEGRATION.md)
-- DTOs: [MARIA_API_INTEGRATION.md](./MARIA_API_INTEGRATION.md)
-- Testes: [TESTING.md](./TESTING.md)
+- Integração: [MARIA_API_INTEGRATION.md](./docs/MARIA_API_INTEGRATION.md)
+- DTOs: [MARIA_API_INTEGRATION.md](./docs/MARIA_API_INTEGRATION.md)
+- Testes: [TESTING.md](./docs/TESTING.md)
 
 **Banco de Dados:**
-- Estrutura: [DATABASE_STRUCTURE.md](./DATABASE_STRUCTURE.md)
-- Queries: [DATABASE_STRUCTURE.md](./DATABASE_STRUCTURE.md)
-- Índices: [DATABASE_STRUCTURE.md](./DATABASE_STRUCTURE.md)
+- Estrutura: [DATABASE_STRUCTURE.md](./docs/DATABASE_STRUCTURE.md)
+- Queries: [DATABASE_STRUCTURE.md](./docs/DATABASE_STRUCTURE.md)
+- Índices: [DATABASE_STRUCTURE.md](./docs/DATABASE_STRUCTURE.md)
 
 ---
 
@@ -404,15 +420,15 @@ poetry run pytest -v
 
 ### Erro de validação Pydantic
 - Verificar se DTOs correspondem à resposta da API
-- Ver [MARIA_API_INTEGRATION.md](./MARIA_API_INTEGRATION.md)
+- Ver [MARIA_API_INTEGRATION.md](./docs/MARIA_API_INTEGRATION.md)
 
 ---
 
 ## 🤝 Contribuindo
 
-1. Leia [OVERVIEW.md](./OVERVIEW.md) e [PRODUCT_FLOW.md](./PRODUCT_FLOW.md)
+1. Leia [OVERVIEW.md](./docs/OVERVIEW.md) e [PRODUCT_FLOW.md](./docs/PRODUCT_FLOW.md)
 2. Crie branch a partir de `main`
-3. Escreva testes ([TESTING.md](./TESTING.md))
+3. Escreva testes ([TESTING.md](./docs/TESTING.md))
 4. Garanta que todos os testes passam
 5. Atualize documentação se necessário
 6. Abra Pull Request
@@ -451,5 +467,5 @@ poetry run pytest -v
 
 ---
 
-> 💡 **Dica**: Sempre comece com [OVERVIEW.md](./OVERVIEW.md) e depois navegue para documentos específicos conforme sua necessidade!
+> 💡 **Dica**: Sempre comece com [OVERVIEW.md](./docs/OVERVIEW.md) e depois navegue para documentos específicos conforme sua necessidade!
 
