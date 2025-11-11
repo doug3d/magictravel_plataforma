@@ -67,7 +67,8 @@ class Product(Model):
     name = fields.CharField(max_length=255)
     description = fields.TextField()
     price = fields.IntField()
-    external_id = fields.TextField() # from maria api
+    product_code = fields.TextField() # from maria api
+    park_code = fields.TextField() # from maria api
     store = fields.ForeignKeyField("models.Store", related_name='store_product')
     created_at = fields.DatetimeField(auto_now_add=True)
 

@@ -14,16 +14,119 @@
             <a href="/" class="logo">🎢 Magic Marketplace</a>
             <nav>
                 <a href="/">Parques</a>
-                <a href="/carrinho">🛒 Carrinho</a>
+                <a href="#" id="cartMenuLink" class="cart-menu-link">
+                    🛒 Carrinho
+                    <span id="cartBadge" class="cart-badge" style="display: none;">0</span>
+                </a>
                 <a href="/minha-conta">👤 Minha Conta</a>
             </nav>
         </div>
     </header>
 
-    <main class="container">
+    <main class="container" id="mainContainer">
         {% block content %}
         {% endblock %}
     </main>
+
+    <!-- Auth Modal -->
+    <div id="authModal" class="auth-modal">
+        <div class="auth-modal-content">
+            <button id="closeAuthModal" class="close-auth-modal" aria-label="Fechar">&times;</button>
+            
+            <div class="auth-modal-header">
+                <h2>🎢 Magic Marketplace</h2>
+                <p>Entre ou cadastre-se para continuar</p>
+            </div>
+            
+            <div class="auth-tabs">
+                <button id="loginTab" class="auth-tab active">Entrar</button>
+                <button id="registerTab" class="auth-tab">Cadastrar</button>
+            </div>
+            
+            <!-- Login Form -->
+            <div id="loginContent" class="auth-tab-content active">
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="loginEmail">E-mail</label>
+                        <input type="email" id="loginEmail" name="email" required autocomplete="email">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="loginPassword">Senha</label>
+                        <input type="password" id="loginPassword" name="password" required autocomplete="current-password">
+                    </div>
+                    
+                    <div id="loginError" class="auth-error" style="display: none;"></div>
+                    
+                    <button type="submit" class="btn-auth">Entrar</button>
+                </form>
+            </div>
+            
+            <!-- Register Form -->
+            <div id="registerContent" class="auth-tab-content">
+                <form id="registerForm">
+                    <div class="form-group">
+                        <label for="registerName">Nome completo</label>
+                        <input type="text" id="registerName" name="name" required autocomplete="name">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="registerEmail">E-mail</label>
+                        <input type="email" id="registerEmail" name="email" required autocomplete="email">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="registerPassword">Senha</label>
+                        <input type="password" id="registerPassword" name="password" required minlength="6" autocomplete="new-password">
+                        <small>Mínimo de 6 caracteres</small>
+                    </div>
+                    
+                    <div id="registerError" class="auth-error" style="display: none;"></div>
+                    
+                    <button type="submit" class="btn-auth">Cadastrar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Auth Overlay -->
+    <div id="authOverlay" class="auth-overlay"></div>
+
+    <!-- Cart Sidebar -->
+    <aside id="cartSidebar" class="cart-sidebar">
+        <div class="cart-header">
+            <h2>🛒 Meu Carrinho</h2>
+            <button id="closeCartBtn" class="close-cart-btn" aria-label="Fechar carrinho">✕</button>
+        </div>
+        
+        <div id="cartContent" class="cart-content">
+            <div id="cartEmpty" class="cart-empty">
+                <div class="empty-cart-icon">🛒</div>
+                <p>Seu carrinho está vazio</p>
+                <small>Adicione produtos para começar</small>
+            </div>
+            
+            <div id="cartItems" class="cart-items" style="display: none;">
+                <!-- Cart items will be rendered here by JavaScript -->
+            </div>
+        </div>
+        
+        <div id="cartFooter" class="cart-footer" style="display: none;">
+            <div class="cart-total">
+                <span>Total</span>
+                <span id="cartTotal" class="total-value">R$ 0,00</span>
+            </div>
+            <button id="checkoutBtn" class="btn-checkout">Continuar</button>
+        </div>
+    </aside>
+
+    <!-- Overlay for cart -->
+    <div id="cartOverlay" class="cart-overlay"></div>
+
+    <!-- Global scripts (ordem importa!) -->
+    <script src="/static/js/api.js"></script>
+    <script src="/static/js/auth-modal.js"></script>
+    <script src="/static/js/cart.js"></script>
 
     {% block scripts %}
     {% endblock %}

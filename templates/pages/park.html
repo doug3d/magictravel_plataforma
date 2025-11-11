@@ -466,9 +466,18 @@
             }
         });
         
-        // Função para adicionar ao carrinho (placeholder)
-        window.addToCart = (productCode) => {
-            alert(`Produto ${productCode} adicionado ao carrinho!\n(Implementar integração com backend)`);
+        // Função para adicionar ao carrinho
+        window.addToCart = async (productCode) => {
+            const parkCode = '{{ park.code }}';
+            
+            // Verificar se o cartManager está disponível
+            if (!window.cartManager) {
+                alert('Erro: Sistema de carrinho não carregado');
+                return;
+            }
+            
+            // Adicionar produto ao carrinho (amount padrão = 1)
+            await window.cartManager.addProduct(productCode, parkCode, 1);
         }
         
         // Definir data mínima (hoje)

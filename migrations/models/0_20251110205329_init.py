@@ -1,0 +1,128 @@
+from tortoise import BaseDBAsyncClient
+
+RUN_IN_TRANSACTION = True
+
+
+async def upgrade(db: BaseDBAsyncClient) -> str:
+    return """
+        CREATE TABLE IF NOT EXISTS "seller" (
+    "id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    "name" VARCHAR(255) NOT NULL,
+    "email" VARCHAR(255) NOT NULL UNIQUE,
+    "password" VARCHAR(255) NOT NULL,
+    "created_at" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS "sellerauth" (
+    "id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    "status" VARCHAR(255) NOT NULL DEFAULT 'valid',
+    "access_token" VARCHAR(255) NOT NULL,
+    "created_at" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "seller_id" INT NOT NULL REFERENCES "seller" ("id") ON DELETE CASCADE
+);
+CREATE TABLE IF NOT EXISTS "store" (
+    "id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    "name" VARCHAR(255) NOT NULL,
+    "credential" VARCHAR(255) NOT NULL,
+    "created_at" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "seller_id" INT NOT NULL REFERENCES "seller" ("id") ON DELETE CASCADE
+);
+CREATE TABLE IF NOT EXISTS "customer" (
+    "id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    "name" VARCHAR(255) NOT NULL,
+    "email" VARCHAR(255) NOT NULL UNIQUE,
+    "password" VARCHAR(255) NOT NULL,
+    "created_at" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "store_id" INT NOT NULL REFERENCES "store" ("id") ON DELETE CASCADE
+);
+CREATE TABLE IF NOT EXISTS "cart" (
+    "id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    "status" VARCHAR(255) NOT NULL DEFAULT 'active',
+    "created_at" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "customer_id" INT NOT NULL REFERENCES "customer" ("id") ON DELETE CASCADE,
+    "store_id" INT NOT NULL REFERENCES "store" ("id") ON DELETE CASCADE
+);
+CREATE TABLE IF NOT EXISTS "customerauth" (
+    "id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    "status" VARCHAR(255) NOT NULL DEFAULT 'valid',
+    "access_token" VARCHAR(255) NOT NULL,
+    "created_at" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "customer_id" INT NOT NULL REFERENCES "customer" ("id") ON DELETE CASCADE
+);
+CREATE TABLE IF NOT EXISTS "order" (
+    "id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    "status" VARCHAR(255) NOT NULL DEFAULT 'created',
+    "code" VARCHAR(255) NOT NULL,
+    "created_at" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "customer_id" INT NOT NULL REFERENCES "customer" ("id") ON DELETE CASCADE,
+    "store_id" INT NOT NULL REFERENCES "store" ("id") ON DELETE CASCADE
+);
+CREATE TABLE IF NOT EXISTS "product" (
+    "id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    "status" VARCHAR(255) NOT NULL DEFAULT 'active',
+    "name" VARCHAR(255) NOT NULL,
+    "description" TEXT NOT NULL,
+    "price" INT NOT NULL,
+    "external_id" TEXT NOT NULL,
+    "created_at" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "store_id" INT NOT NULL REFERENCES "store" ("id") ON DELETE CASCADE
+);
+CREATE TABLE IF NOT EXISTS "cartitem" (
+    "id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    "amount" INT NOT NULL DEFAULT 1,
+    "created_at" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "cart_id" INT NOT NULL REFERENCES "cart" ("id") ON DELETE CASCADE,
+    "product_id" INT NOT NULL REFERENCES "product" ("id") ON DELETE CASCADE
+);
+CREATE TABLE IF NOT EXISTS "orderitem" (
+    "id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    "price" INT NOT NULL,
+    "amount" INT NOT NULL DEFAULT 1,
+    "order_id" INT NOT NULL REFERENCES "order" ("id") ON DELETE CASCADE,
+    "product_id" INT NOT NULL REFERENCES "product" ("id") ON DELETE CASCADE
+);
+CREATE TABLE IF NOT EXISTS "aerich" (
+    "id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    "version" VARCHAR(255) NOT NULL,
+    "app" VARCHAR(100) NOT NULL,
+    "content" JSON NOT NULL
+);"""
+
+
+async def downgrade(db: BaseDBAsyncClient) -> str:
+    return """
+        """
+
+
+MODELS_STATE = (
+    "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"
+    "cKKT8Lt06j39BzCtgFQ="
+)

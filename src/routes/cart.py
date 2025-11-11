@@ -11,6 +11,16 @@ router = APIRouter(
 )
 
 
+@router.get("/current")
+@customer_required
+@store_required
+async def get_current_cart(request: Request):
+    """
+    Retorna os itens do carrinho atual do cliente autenticado.
+    """
+    return await get_cart_items(request.current_store.id, request.current_user.id)
+
+
 @router.post("/")
 @customer_required
 @store_required

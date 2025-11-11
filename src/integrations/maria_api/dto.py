@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, ConfigDict
-from typing import List, Union, Optional
+from typing import List, Union, Optional, Any
 
 class ParkLocation(BaseModel):
     city: str
@@ -79,10 +79,10 @@ class ParkProductDetailExtension(BaseModel):
     days: int
     parks: int
     product_kind: str = Field(..., alias="productKind")
-    about_ticket: str = Field(..., alias="aboutTicket")
-    ticket_type: str = Field(..., alias="ticketType")
-    ticket_banner: str = Field(..., alias="ticketBanner")
-    observations: str
+    about_ticket: Optional[str] = Field(None, alias="aboutTicket")
+    ticket_type: Optional[str] = Field(None, alias="ticketType")
+    ticket_banner: Optional[str] = Field(None, alias="ticketBanner")
+    observations: Optional[str] = None
     notes: Optional[str] = None
 
 class ParkProductDetail(BaseModel):
@@ -96,7 +96,7 @@ class ParkProductDetail(BaseModel):
     is_park_to_park: bool = Field(..., alias="isParkToPark")
     is_dated: bool = Field(..., alias="isDated")
     is_timed: bool = Field(..., alias="isTimed")
-    available_options: List[str] = Field(..., alias="availableOptions")
+    available_options: List[Any] = Field(..., alias="availableOptions")  # Pode ser str ou dict
     extensions: ParkProductDetailExtension
     starting_price: PricePair = Field(..., alias="startingPrice")
     is_special: bool = Field(..., alias="isSpecial")
