@@ -1,0 +1,188 @@
+{% extends "admin_seller/base_seller.html" %}
+
+{% block title %}Seller Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<!-- Stats Cards -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon">💰</div>
+        <div class="stat-content">
+            <div class="stat-label">Vendas Hoje</div>
+            <div class="stat-value" id="totalToday">R$ 0,00</div>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon">📈</div>
+        <div class="stat-content">
+            <div class="stat-label">Vendas do Mês</div>
+            <div class="stat-value" id="totalMonth">R$ 0,00</div>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon">👥</div>
+        <div class="stat-content">
+            <div class="stat-label">Clientes Únicos</div>
+            <div class="stat-value" id="uniqueCustomers">0</div>
+        </div>
+    </div>
+</div>
+
+<!-- Orders Table -->
+<div class="table-section">
+    <div class="table-header">
+        <h2>Pedidos Recentes</h2>
+        <button class="btn-refresh" id="refreshBtn">
+            🔄 Atualizar
+        </button>
+    </div>
+    
+    <div class="table-container">
+        <div id="loadingOrders" class="loading-state">
+            <div class="spinner-large"></div>
+            <p>Carregando pedidos...</p>
+        </div>
+        
+        <div id="emptyOrders" class="empty-state" style="display: none;">
+            <div class="empty-icon">📦</div>
+            <p>Nenhum pedido encontrado</p>
+        </div>
+        
+        <table id="ordersTable" style="display: none;">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Cliente</th>
+                    <th>Status</th>
+                    <th>Produtos</th>
+                    <th>Total</th>
+                    <th>Data</th>
+                </tr>
+            </thead>
+            <tbody id="ordersTableBody">
+                <!-- Orders will be injected here -->
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Flag para garantir que só carrega após auth
+    let authReady = false;
+    
+    // Listener para quando auth estiver pronto
+    window.addEventListener('adminAuthReady', () => {
+        authReady = true;
+        loadDashboardData();
+    });
+    
+    // Carregar dados do dashboard
+    async function loadDashboardData() {
+        // Aguardar auth estar pronto
+        if (!authReady) {
+            return;
+        }
+        try {
+            // Carregar estatísticas do seller
+            const stats = await window.adminApi.get('/seller/admin/api/dashboard-stats');
+            
+            document.getElementById('totalToday').textContent = formatCurrency(stats.total_today);
+            document.getElementById('totalMonth').textContent = formatCurrency(stats.total_month);
+            document.getElementById('uniqueCustomers').textContent = stats.unique_customers;
+            
+            // Carregar pedidos
+            await loadOrders();
+        } catch (error) {
+            console.error('Erro ao carregar dashboard:', error);
+            
+            if (error.message.includes('401') || error.message.includes('403')) {
+                // Token inválido, redirecionar para login
+                localStorage.removeItem('seller_token');
+                window.location.href = '/admin/login';
+            }
+        }
+    }
+    
+    async function loadOrders() {
+        const loadingOrders = document.getElementById('loadingOrders');
+        const emptyOrders = document.getElementById('emptyOrders');
+        const ordersTable = document.getElementById('ordersTable');
+        const ordersTableBody = document.getElementById('ordersTableBody');
+        
+        try {
+            loadingOrders.style.display = 'flex';
+            emptyOrders.style.display = 'none';
+            ordersTable.style.display = 'none';
+            
+            const data = await window.adminApi.get('/seller/admin/api/orders');
+            
+            loadingOrders.style.display = 'none';
+            
+            if (data.orders.length === 0) {
+                emptyOrders.style.display = 'flex';
+                return;
+            }
+            
+            // Renderizar pedidos
+            ordersTableBody.innerHTML = data.orders.map(order => `
+                <tr>
+                    <td>#${order.id}</td>
+                    <td>${order.customer_email}</td>
+                    <td><span class="status-badge status-${order.status}">${getStatusText(order.status)}</span></td>
+                    <td class="products-cell">${order.products}</td>
+                    <td class="total-cell">${formatCurrency(order.total)}</td>
+                    <td>${formatDate(order.created_at)}</td>
+                </tr>
+            `).join('');
+            
+            ordersTable.style.display = 'table';
+        } catch (error) {
+            console.error('Erro ao carregar pedidos:', error);
+            loadingOrders.style.display = 'none';
+            emptyOrders.style.display = 'flex';
+        }
+    }
+    
+    function formatCurrency(value) {
+        return new Intl.NumberFormat('pt-BR', {
+            style: 'currency',
+            currency: 'BRL'
+        }).format(value);
+    }
+    
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        return new Intl.DateTimeFormat('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        }).format(date);
+    }
+    
+    function getStatusText(status) {
+        const statusMap = {
+            'pending': 'Pendente',
+            'completed': 'Concluído',
+            'cancelled': 'Cancelado',
+            'processing': 'Processando'
+        };
+        return statusMap[status] || status;
+    }
+    
+    // Event listeners
+    document.getElementById('refreshBtn').addEventListener('click', loadOrders);
+    
+    // Se auth já estiver pronto, carregar imediatamente
+    if (authReady) {
+        loadDashboardData();
+    }
+</script>
+{% endblock %}
+

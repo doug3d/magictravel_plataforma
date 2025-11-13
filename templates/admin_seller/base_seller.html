@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Seller Admin{% endblock %} - Magic Marketplace</title>
+    <link rel="stylesheet" href="/static/css/admin.css">
+    {% block styles %}
+    {% endblock %}
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="authLoadingScreen" class="auth-loading-screen">
+        <div class="auth-loading-content">
+            <div class="spinner-large"></div>
+            <p>Verificando autenticação do seller...</p>
+        </div>
+    </div>
+    
+    <div class="admin-layout" id="adminContent" style="display: none;">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2 id="storeName">📦 Carregando...</h2>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a href="/seller/admin/" class="nav-item active">
+                    <span class="nav-icon">📊</span>
+                    <span class="nav-text">Dashboard</span>
+                </a>
+                <a href="/seller/admin/products" class="nav-item">
+                    <span class="nav-icon">🎟️</span>
+                    <span class="nav-text">Meus Produtos</span>
+                </a>
+                <a href="/seller/admin/orders" class="nav-item">
+                    <span class="nav-icon">🛒</span>
+                    <span class="nav-text">Meus Pedidos</span>
+                </a>
+                <a href="/seller/admin/customers" class="nav-item">
+                    <span class="nav-icon">👥</span>
+                    <span class="nav-text">Meus Clientes</span>
+                </a>
+                <a href="/seller/admin/settings" class="nav-item">
+                    <span class="nav-icon">⚙️</span>
+                    <span class="nav-text">Configurações</span>
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar">👤</div>
+                    <div class="user-details">
+                        <div class="user-email" id="sellerEmail">seller@example.com</div>
+                    </div>
+                </div>
+                <button class="btn-logout" id="logoutBtn">
+                    <span>🚪</span> Sair
+                </button>
+            </div>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="content-header">
+                <h1>{% block page_title %}Dashboard{% endblock %}</h1>
+                <div class="header-actions">
+                    {% block header_actions %}
+                    {% endblock %}
+                </div>
+            </div>
+            
+            <div class="content-body">
+                {% block content %}
+                {% endblock %}
+            </div>
+        </main>
+    </div>
+    
+    <!-- Global Admin Scripts -->
+    <script src="/static/js/admin-auth.js"></script>
+    {% block scripts %}
+    {% endblock %}
+</body>
+</html>
+

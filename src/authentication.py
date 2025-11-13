@@ -1,6 +1,6 @@
 from functools import wraps
 from src.models import CustomerAuth, SellerAuth, Store
-from fastapi import HTTPException, Header, Request
+from fastapi import HTTPException, Request
 import datetime
 
 
