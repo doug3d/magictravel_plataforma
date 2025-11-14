@@ -1,0 +1,470 @@
+{% extends "admin_seller/base_seller.html" %}
+
+{% block title %}Configurações{% endblock %}
+{% block page_title %}Configurações da Loja{% endblock %}
+
+{% block content %}
+<!-- Formulário de Configurações -->
+<div class="settings-container">
+    <div class="settings-card">
+        <div class="card-header">
+            <h2>Informações da Loja</h2>
+            <p>Configure as informações básicas da sua loja</p>
+        </div>
+        
+        <form id="settingsForm">
+            <div class="form-group">
+                <label for="storeName">Nome da Loja *</label>
+                <input 
+                    type="text" 
+                    id="storeName" 
+                    required 
+                    maxlength="255"
+                    placeholder="Digite o nome da loja"
+                >
+                <small class="help-text">Este nome será exibido para os clientes</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="commission">Comissão sobre Produtos (%)</label>
+                <div class="input-with-addon">
+                    <input 
+                        type="number" 
+                        id="commission" 
+                        min="0" 
+                        max="100" 
+                        step="0.01"
+                        placeholder="0.00"
+                    >
+                    <span class="input-addon">%</span>
+                </div>
+                <small class="help-text">
+                    Percentual de comissão adicionado ao preço base dos produtos.<br>
+                    Exemplo: Produto R$ 100,00 + 10% = R$ 110,00 para o cliente.
+                </small>
+            </div>
+            
+            <div class="form-group-readonly">
+                <label>Credencial da Loja (Store Credential)</label>
+                <div class="readonly-field-copy">
+                    <code id="storeCredential">Carregando...</code>
+                    <button type="button" class="btn-copy" id="copyBtn" title="Copiar">
+                        📋
+                    </button>
+                </div>
+                <small class="help-text">Use esta credencial para integrar sua loja com sistemas externos</small>
+            </div>
+            
+            <div class="form-group-readonly">
+                <label>Data de Criação</label>
+                <div class="readonly-field" id="createdAt">-</div>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn-primary" id="saveBtn">
+                    💾 Salvar Configurações
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Card de Informações -->
+    <div class="info-card">
+        <div class="info-header">
+            <h3>ℹ️ Sobre a Comissão</h3>
+        </div>
+        <div class="info-content">
+            <h4>Como funciona?</h4>
+            <p>
+                A comissão é aplicada <strong>automaticamente</strong> sobre o preço base de todos os produtos 
+                quando são exibidos na sua loja.
+            </p>
+            
+            <h4>Exemplo de Cálculo:</h4>
+            <div class="example-calc">
+                <div class="calc-row">
+                    <span>Preço Base:</span>
+                    <span>R$ 100,00</span>
+                </div>
+                <div class="calc-row">
+                    <span>Comissão (10%):</span>
+                    <span>+ R$ 10,00</span>
+                </div>
+                <div class="calc-row total">
+                    <span>Preço Final:</span>
+                    <span>R$ 110,00</span>
+                </div>
+            </div>
+            
+            <h4>💡 Dica:</h4>
+            <p>
+                Defina uma comissão que cubra seus custos operacionais e gere lucro, 
+                mas mantenha preços competitivos para seus clientes.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let currentSettings = null;
+    
+    // Carregar configurações atuais
+    async function loadSettings() {
+        try {
+            const data = await window.adminApi.get('/seller/admin/api/settings');
+            currentSettings = data;
+            
+            // Preencher formulário
+            document.getElementById('storeName').value = data.name;
+            document.getElementById('commission').value = data.commission_percentage.toFixed(2);
+            document.getElementById('storeCredential').textContent = data.credential;
+            document.getElementById('createdAt').textContent = formatDate(data.created_at);
+        } catch (error) {
+            console.error('Erro ao carregar configurações:', error);
+            showNotification('Erro ao carregar configurações', 'error');
+        }
+    }
+    
+    // Salvar configurações
+    async function saveSettings(event) {
+        event.preventDefault();
+        
+        const saveBtn = document.getElementById('saveBtn');
+        const storeName = document.getElementById('storeName').value.trim();
+        const commission = parseFloat(document.getElementById('commission').value);
+        
+        // Validação
+        if (!storeName) {
+            showNotification('Nome da loja é obrigatório', 'error');
+            return;
+        }
+        
+        if (isNaN(commission) || commission < 0 || commission > 100) {
+            showNotification('Comissão deve estar entre 0 e 100%', 'error');
+            return;
+        }
+        
+        try {
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '⏳ Salvando...';
+            
+            const data = {
+                name: storeName,
+                commission_percentage: commission
+            };
+            
+            const result = await window.adminApi.put('/seller/admin/api/settings', data);
+            
+            // Atualizar configurações locais
+            currentSettings = result;
+            
+            // Atualizar nome da loja no sidebar (se mudou)
+            const storeNameEl = document.getElementById('storeName');
+            if (storeNameEl && result.name) {
+                document.querySelector('#storeName').textContent = `🏪 ${result.name}`;
+            }
+            
+            showNotification('Configurações salvas com sucesso!', 'success');
+        } catch (error) {
+            console.error('Erro ao salvar configurações:', error);
+            showNotification(error.message || 'Erro ao salvar configurações', 'error');
+        } finally {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = '💾 Salvar Configurações';
+        }
+    }
+    
+    // Copiar credencial
+    function copyCredential() {
+        const credential = document.getElementById('storeCredential').textContent;
+        
+        navigator.clipboard.writeText(credential).then(() => {
+            showNotification('Credencial copiada!', 'success');
+            
+            // Feedback visual
+            const copyBtn = document.getElementById('copyBtn');
+            const originalText = copyBtn.innerHTML;
+            copyBtn.innerHTML = '✅';
+            setTimeout(() => {
+                copyBtn.innerHTML = originalText;
+            }, 2000);
+        }).catch(() => {
+            showNotification('Erro ao copiar credencial', 'error');
+        });
+    }
+    
+    // Mostrar notificação
+    function showNotification(message, type = 'info') {
+        // Implementação simples (pode melhorar depois com toast real)
+        alert(message);
+    }
+    
+    // Formatação
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        return new Intl.DateTimeFormat('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        }).format(date);
+    }
+    
+    // Event listeners
+    document.getElementById('settingsForm').addEventListener('submit', saveSettings);
+    document.getElementById('copyBtn').addEventListener('click', copyCredential);
+    
+    // Aguardar auth estar pronta
+    window.addEventListener('adminAuthReady', () => {
+        loadSettings();
+    });
+</script>
+
+<style>
+    .settings-container {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 2rem;
+        max-width: 1400px;
+    }
+    
+    .settings-card,
+    .info-card {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .card-header {
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 2px solid #e2e8f0;
+    }
+    
+    .card-header h2 {
+        font-size: 1.5rem;
+        color: #2d3748;
+        margin-bottom: 0.5rem;
+    }
+    
+    .card-header p {
+        color: #718096;
+        margin: 0;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: #2d3748;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+    
+    .form-group input {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.2s;
+    }
+    
+    .form-group input:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+    
+    .input-with-addon {
+        display: flex;
+        align-items: center;
+        gap: 0;
+    }
+    
+    .input-with-addon input {
+        flex: 1;
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+    
+    .input-addon {
+        padding: 0.75rem 1rem;
+        background: #f7fafc;
+        border: 2px solid #e2e8f0;
+        border-left: none;
+        border-top-right-radius: 8px;
+        border-bottom-right-radius: 8px;
+        color: #718096;
+        font-weight: 600;
+    }
+    
+    .help-text {
+        display: block;
+        margin-top: 0.5rem;
+        color: #718096;
+        font-size: 0.85rem;
+        line-height: 1.4;
+    }
+    
+    .form-group-readonly {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group-readonly label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: #718096;
+        font-weight: 500;
+        font-size: 0.85rem;
+    }
+    
+    .readonly-field {
+        background: #f7fafc;
+        padding: 0.75rem;
+        border-radius: 8px;
+        color: #2d3748;
+    }
+    
+    .readonly-field-copy {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .readonly-field-copy code {
+        flex: 1;
+        background: #f7fafc;
+        padding: 0.75rem;
+        border-radius: 8px;
+        color: #667eea;
+        font-family: monospace;
+        font-size: 0.9rem;
+        display: block;
+    }
+    
+    .btn-copy {
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1.25rem;
+        transition: all 0.2s;
+    }
+    
+    .btn-copy:hover {
+        background: #5a67d8;
+        transform: scale(1.05);
+    }
+    
+    .form-actions {
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 2px solid #e2e8f0;
+    }
+    
+    .btn-primary {
+        padding: 1rem 2rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        width: 100%;
+    }
+    
+    .btn-primary:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(102, 126, 234, 0.4);
+    }
+    
+    .btn-primary:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    
+    /* Info Card */
+    .info-card {
+        align-self: start;
+        position: sticky;
+        top: 2rem;
+    }
+    
+    .info-header {
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #e2e8f0;
+    }
+    
+    .info-header h3 {
+        font-size: 1.1rem;
+        color: #2d3748;
+        margin: 0;
+    }
+    
+    .info-content h4 {
+        font-size: 0.95rem;
+        color: #2d3748;
+        margin: 1.5rem 0 0.75rem 0;
+    }
+    
+    .info-content h4:first-child {
+        margin-top: 0;
+    }
+    
+    .info-content p {
+        color: #718096;
+        font-size: 0.9rem;
+        line-height: 1.6;
+        margin: 0 0 1rem 0;
+    }
+    
+    .example-calc {
+        background: #f7fafc;
+        padding: 1rem;
+        border-radius: 8px;
+        margin: 1rem 0;
+    }
+    
+    .calc-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        color: #2d3748;
+        font-size: 0.9rem;
+    }
+    
+    .calc-row.total {
+        margin-top: 0.5rem;
+        padding-top: 0.75rem;
+        border-top: 2px solid #e2e8f0;
+        font-weight: 700;
+        color: #48bb78;
+        font-size: 1rem;
+    }
+    
+    /* Responsive */
+    @media (max-width: 1024px) {
+        .settings-container {
+            grid-template-columns: 1fr;
+        }
+        
+        .info-card {
+            position: relative;
+            top: 0;
+        }
+    }
+</style>
+{% endblock %}
+

@@ -20,7 +20,7 @@ class AuthenticationError extends Error {
 class ApiClient {
     constructor() {
         // Credencial da loja (do seed)
-        this.storeCredential = '604b1275ad3c49cd838607b9b5805d19';
+        this.storeCredential = '6059a3f072994bfc806a18cb098b265e';
         
         // Callback pendente para retry após login
         this.pendingRetry = null;

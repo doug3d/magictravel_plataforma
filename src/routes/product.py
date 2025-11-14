@@ -2,6 +2,8 @@ from fastapi import APIRouter, Request, HTTPException, Query
 from src.models import Product
 from src.authentication import store_required
 from src.integrations.maria_api.maria import MariaApi
+from src.constants import PLATFORM_COMMISSION_PERCENTAGE
+from decimal import Decimal
 import re
 
 router = APIRouter(
@@ -65,12 +67,22 @@ async def get_or_create_product_by_external_code(
     # Extrair e validar preço (converter de string para centavos)
     try:
         price_str = product_detail.starting_price.usdbrl.amount
-        price_float = float(price_str)
-        if price_float <= 0:
+        base_price = Decimal(str(price_str))
+        
+        if base_price <= 0:
             raise HTTPException(status_code=400, detail="Invalid product: price must be greater than 0")
-        price_cents = int(price_float * 100)  # Converter para centavos
-    except (ValueError, AttributeError):
-        raise HTTPException(status_code=400, detail="Invalid product: invalid price format")
+        
+        # Aplicar comissão da plataforma (5%)
+        price_with_platform = base_price * (1 + PLATFORM_COMMISSION_PERCENTAGE / 100)
+        
+        # Aplicar comissão do seller
+        seller_commission = Decimal(str(request.current_store.commission_percentage))
+        final_price = price_with_platform * (1 + seller_commission / 100)
+        
+        # Converter para centavos (arredondando)
+        price_cents = int(final_price * 100)
+    except (ValueError, AttributeError) as e:
+        raise HTTPException(status_code=400, detail=f"Invalid product: invalid price format - {str(e)}")
     
     # Sanitizar nome (truncar e escapar)
     name = product_detail.ticket_name[:255].strip()

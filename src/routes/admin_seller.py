@@ -324,3 +324,68 @@ async def seller_admin_orders_page(request: Request):
         "request": request
     })
 
+
+@router.get("/settings", response_class=HTMLResponse)
+async def seller_admin_settings_page(request: Request):
+    """Página de configurações da loja"""
+    return templates.TemplateResponse("admin_seller/settings.html", {
+        "request": request
+    })
+
+
+@router.get("/api/settings")
+@seller_required
+@store_required
+async def get_store_settings(request: Request):
+    """
+    Retorna configurações atuais da loja
+    """
+    store = request.current_store
+    
+    return {
+        "id": store.id,
+        "name": store.name,
+        "commission_percentage": float(store.commission_percentage),
+        "credential": store.credential,
+        "created_at": store.created_at.isoformat()
+    }
+
+
+@router.put("/api/settings")
+@seller_required
+@store_required
+async def update_store_settings(request: Request):
+    """
+    Atualiza configurações da loja
+    """
+    store = request.current_store
+    
+    # Pegar dados do body
+    body = await request.json()
+    
+    # Atualizar campos permitidos
+    if "name" in body:
+        name = body["name"].strip()
+        if not name:
+            raise HTTPException(status_code=400, detail="Nome da loja não pode ser vazio")
+        if len(name) > 255:
+            raise HTTPException(status_code=400, detail="Nome da loja muito longo (máximo 255 caracteres)")
+        store.name = name
+    
+    if "commission_percentage" in body:
+        commission = float(body["commission_percentage"])
+        if commission < 0:
+            raise HTTPException(status_code=400, detail="Comissão não pode ser negativa")
+        if commission > 100:
+            raise HTTPException(status_code=400, detail="Comissão não pode ser maior que 100%")
+        store.commission_percentage = commission
+    
+    await store.save()
+    
+    return {
+        "id": store.id,
+        "name": store.name,
+        "commission_percentage": float(store.commission_percentage),
+        "message": "Configurações atualizadas com sucesso"
+    }
+

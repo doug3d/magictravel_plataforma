@@ -30,6 +30,7 @@ class Store(Model):
     name = fields.CharField(max_length=255)
     seller = fields.ForeignKeyField("models.Seller", related_name='seller_owner')
     credential = fields.CharField(max_length=255)
+    commission_percentage = fields.DecimalField(max_digits=5, decimal_places=2, default=0)  # Ex: 10.50 = 10.5%
     created_at = fields.DatetimeField(auto_now_add=True)
 
 class Seller(Model):
