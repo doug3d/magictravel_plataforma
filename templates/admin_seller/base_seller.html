@@ -79,6 +79,25 @@
     
     <!-- Global Admin Scripts -->
     <script src="/static/js/admin-auth.js"></script>
+    
+    <script>
+        // Marcar item do menu ativo baseado na URL
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentPath = window.location.pathname;
+            const navItems = document.querySelectorAll('.nav-item');
+            
+            navItems.forEach(item => {
+                item.classList.remove('active');
+                const href = item.getAttribute('href');
+                
+                // Exact match ou match de subpágina
+                if (href === currentPath || (href !== '/seller/admin/' && currentPath.startsWith(href))) {
+                    item.classList.add('active');
+                }
+            });
+        });
+    </script>
+    
     {% block scripts %}
     {% endblock %}
 </body>

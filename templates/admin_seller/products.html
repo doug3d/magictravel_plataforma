@@ -1,0 +1,474 @@
+{% extends "admin_seller/base_seller.html" %}
+
+{% block title %}Meus Produtos{% endblock %}
+{% block page_title %}Meus Produtos{% endblock %}
+
+{% block content %}
+<!-- Filtros e Ações -->
+<div class="page-header">
+    <div class="filters">
+        <select id="statusFilter" class="filter-select">
+            <option value="">Todos os Status</option>
+            <option value="active">Ativos</option>
+            <option value="inactive">Inativos</option>
+        </select>
+        <button class="btn-refresh" id="refreshBtn">
+            🔄 Atualizar
+        </button>
+    </div>
+    <div class="stats-info">
+        <span id="totalProducts">0 produtos</span>
+    </div>
+</div>
+
+<!-- Tabela de Produtos -->
+<div class="table-section">
+    <div class="table-container">
+        <div id="loadingProducts" class="loading-state">
+            <div class="spinner-large"></div>
+            <p>Carregando produtos...</p>
+        </div>
+        
+        <div id="emptyProducts" class="empty-state" style="display: none;">
+            <div class="empty-icon">🎟️</div>
+            <p>Nenhum produto encontrado</p>
+            <small>Os produtos aparecem aqui quando são adicionados ao carrinho pelos customers.</small>
+        </div>
+        
+        <table id="productsTable" style="display: none;">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nome</th>
+                    <th>Preço</th>
+                    <th>Status</th>
+                    <th>Código Externo</th>
+                    <th>Data de Criação</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="productsTableBody">
+                <!-- Products will be injected here -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal de Edição -->
+<div id="editModal" class="modal" style="display: none;">
+    <div class="modal-overlay" id="modalOverlay"></div>
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Editar Produto</h2>
+            <button class="modal-close" id="modalClose">✕</button>
+        </div>
+        <div class="modal-body">
+            <form id="editProductForm">
+                <input type="hidden" id="editProductId">
+                
+                <div class="form-group">
+                    <label for="editProductName">Nome do Produto</label>
+                    <input type="text" id="editProductName" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="editProductDescription">Descrição</label>
+                    <textarea id="editProductDescription" rows="4"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="editProductPrice">Preço (R$)</label>
+                    <input type="number" id="editProductPrice" step="0.01" min="0" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="editProductStatus">Status</label>
+                    <select id="editProductStatus" required>
+                        <option value="active">Ativo</option>
+                        <option value="inactive">Inativo</option>
+                    </select>
+                </div>
+                
+                <div class="form-group-readonly">
+                    <label>Código Externo (Maria API)</label>
+                    <div class="readonly-field" id="editProductCode">-</div>
+                </div>
+                
+                <div class="form-group-readonly">
+                    <label>Código do Parque</label>
+                    <div class="readonly-field" id="editParkCode">-</div>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" id="cancelBtn">Cancelar</button>
+                    <button type="submit" class="btn-primary" id="saveBtn">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Estado
+    let currentFilter = '';
+    
+    // Carregar produtos
+    async function loadProducts() {
+        const loadingProducts = document.getElementById('loadingProducts');
+        const emptyProducts = document.getElementById('emptyProducts');
+        const productsTable = document.getElementById('productsTable');
+        const productsTableBody = document.getElementById('productsTableBody');
+        const totalProductsEl = document.getElementById('totalProducts');
+        
+        try {
+            loadingProducts.style.display = 'flex';
+            emptyProducts.style.display = 'none';
+            productsTable.style.display = 'none';
+            
+            const url = currentFilter 
+                ? `/seller/admin/api/products?status=${currentFilter}`
+                : '/seller/admin/api/products';
+            
+            const data = await window.adminApi.get(url);
+            
+            loadingProducts.style.display = 'none';
+            
+            // Atualizar contador
+            totalProductsEl.textContent = `${data.total} produto${data.total !== 1 ? 's' : ''}`;
+            
+            if (data.products.length === 0) {
+                emptyProducts.style.display = 'flex';
+                return;
+            }
+            
+            // Renderizar produtos
+            productsTableBody.innerHTML = data.products.map(product => `
+                <tr>
+                    <td>#${product.id}</td>
+                    <td class="product-name">${product.name}</td>
+                    <td class="product-price">${formatCurrency(product.price)}</td>
+                    <td><span class="status-badge status-${product.status}">${getStatusText(product.status)}</span></td>
+                    <td><code>${product.product_code}</code></td>
+                    <td>${formatDate(product.created_at)}</td>
+                    <td>
+                        <button class="btn-action" onclick="editProduct(${product.id})" title="Editar">
+                            ✏️
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+            
+            productsTable.style.display = 'table';
+        } catch (error) {
+            console.error('Erro ao carregar produtos:', error);
+            loadingProducts.style.display = 'none';
+            emptyProducts.style.display = 'flex';
+        }
+    }
+    
+    // Editar produto
+    async function editProduct(productId) {
+        try {
+            // Buscar dados do produto
+            const data = await window.adminApi.get('/seller/admin/api/products');
+            const product = data.products.find(p => p.id === productId);
+            
+            if (!product) {
+                alert('Produto não encontrado');
+                return;
+            }
+            
+            // Preencher formulário
+            document.getElementById('editProductId').value = product.id;
+            document.getElementById('editProductName').value = product.name;
+            document.getElementById('editProductDescription').value = product.description;
+            document.getElementById('editProductPrice').value = product.price.toFixed(2);
+            document.getElementById('editProductStatus').value = product.status;
+            document.getElementById('editProductCode').textContent = product.product_code;
+            document.getElementById('editParkCode').textContent = product.park_code;
+            
+            // Mostrar modal
+            document.getElementById('editModal').style.display = 'block';
+        } catch (error) {
+            console.error('Erro ao carregar produto:', error);
+            alert('Erro ao carregar dados do produto');
+        }
+    }
+    
+    // Salvar produto
+    async function saveProduct(event) {
+        event.preventDefault();
+        
+        const productId = document.getElementById('editProductId').value;
+        const saveBtn = document.getElementById('saveBtn');
+        
+        try {
+            saveBtn.disabled = true;
+            saveBtn.textContent = 'Salvando...';
+            
+            const data = {
+                name: document.getElementById('editProductName').value,
+                description: document.getElementById('editProductDescription').value,
+                price: parseFloat(document.getElementById('editProductPrice').value),
+                status: document.getElementById('editProductStatus').value
+            };
+            
+            await window.adminApi.put(`/seller/admin/api/products/${productId}`, data);
+            
+            // Fechar modal
+            closeModal();
+            
+            // Recarregar produtos
+            await loadProducts();
+            
+            // Mostrar sucesso
+            showNotification('Produto atualizado com sucesso!', 'success');
+        } catch (error) {
+            console.error('Erro ao salvar produto:', error);
+            showNotification('Erro ao salvar produto', 'error');
+        } finally {
+            saveBtn.disabled = false;
+            saveBtn.textContent = 'Salvar';
+        }
+    }
+    
+    // Fechar modal
+    function closeModal() {
+        document.getElementById('editModal').style.display = 'none';
+    }
+    
+    // Mostrar notificação
+    function showNotification(message, type = 'info') {
+        // Implementação simples (pode melhorar depois)
+        alert(message);
+    }
+    
+    // Formatação
+    function formatCurrency(value) {
+        return new Intl.NumberFormat('pt-BR', {
+            style: 'currency',
+            currency: 'BRL'
+        }).format(value);
+    }
+    
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        return new Intl.DateTimeFormat('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        }).format(date);
+    }
+    
+    function getStatusText(status) {
+        const statusMap = {
+            'active': 'Ativo',
+            'inactive': 'Inativo'
+        };
+        return statusMap[status] || status;
+    }
+    
+    // Event listeners
+    document.getElementById('statusFilter').addEventListener('change', (e) => {
+        currentFilter = e.target.value;
+        loadProducts();
+    });
+    
+    document.getElementById('refreshBtn').addEventListener('click', loadProducts);
+    document.getElementById('editProductForm').addEventListener('submit', saveProduct);
+    document.getElementById('modalClose').addEventListener('click', closeModal);
+    document.getElementById('modalOverlay').addEventListener('click', closeModal);
+    document.getElementById('cancelBtn').addEventListener('click', closeModal);
+    
+    // Aguardar auth estar pronta
+    window.addEventListener('adminAuthReady', () => {
+        loadProducts();
+    });
+</script>
+
+<style>
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding: 1rem;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .filters {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+    
+    .filter-select {
+        padding: 0.625rem 1rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        cursor: pointer;
+    }
+    
+    .stats-info {
+        color: #718096;
+        font-weight: 500;
+    }
+    
+    .product-name {
+        font-weight: 600;
+        max-width: 300px;
+    }
+    
+    .product-price {
+        font-weight: 600;
+        color: #48bb78;
+    }
+    
+    code {
+        background: #f7fafc;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        color: #667eea;
+    }
+    
+    .btn-action {
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        font-size: 1.25rem;
+        padding: 0.5rem;
+        transition: transform 0.2s;
+    }
+    
+    .btn-action:hover {
+        transform: scale(1.2);
+    }
+    
+    /* Modal */
+    .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 1000;
+    }
+    
+    .modal-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+    }
+    
+    .modal-content {
+        position: relative;
+        background: white;
+        max-width: 600px;
+        margin: 2rem auto;
+        border-radius: 16px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+    
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.5rem;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .modal-header h2 {
+        font-size: 1.5rem;
+        color: #2d3748;
+    }
+    
+    .modal-close {
+        background: transparent;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: #718096;
+        padding: 0.5rem;
+        transition: color 0.2s;
+    }
+    
+    .modal-close:hover {
+        color: #f56565;
+    }
+    
+    .modal-body {
+        padding: 1.5rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: #2d3748;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+    
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.2s;
+    }
+    
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+    
+    .form-group-readonly {
+        margin-bottom: 1rem;
+    }
+    
+    .form-group-readonly label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: #718096;
+        font-weight: 500;
+        font-size: 0.85rem;
+    }
+    
+    .readonly-field {
+        background: #f7fafc;
+        padding: 0.75rem;
+        border-radius: 8px;
+        color: #2d3748;
+        font-family: monospace;
+    }
+    
+    .modal-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+        margin-top: 2rem;
+    }
+</style>
+{% endblock %}
+

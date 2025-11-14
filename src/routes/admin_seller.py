@@ -3,7 +3,7 @@ Seller Admin routes
 Each seller manages their own store through this admin panel
 Protected by @seller_required decorator
 """
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from datetime import datetime, timedelta
@@ -12,7 +12,7 @@ from tortoise.functions import Sum, Count
 from tortoise.expressions import Q
 
 from src.authentication import seller_required, store_required
-from src.models import Order, OrderItem, Customer, Store
+from src.models import Order, OrderItem, Customer, Store, Product
 
 router = APIRouter(prefix="/seller/admin", tags=["seller_admin"])
 templates = Jinja2Templates(directory="templates")
@@ -129,4 +129,191 @@ async def get_seller_orders(request: Request, limit: int = 50):
         })
     
     return {"orders": orders_data}
+
+
+@router.get("/products", response_class=HTMLResponse)
+async def seller_admin_products_page(request: Request):
+    """Página de gerenciamento de produtos do seller"""
+    return templates.TemplateResponse("admin_seller/products.html", {
+        "request": request
+    })
+
+
+@router.get("/api/products")
+@seller_required
+@store_required
+async def get_seller_products(request: Request, limit: int = 100, offset: int = 0, status: str = None):
+    """
+    Retorna lista de produtos da loja do seller
+    """
+    store = request.current_store
+    
+    # Filtros
+    filters = {"store": store}
+    if status:
+        filters["status"] = status
+    
+    # Buscar produtos
+    products = await Product.filter(**filters).order_by('-created_at').limit(limit).offset(offset)
+    
+    # Total de produtos
+    total = await Product.filter(**filters).count()
+    
+    products_data = []
+    for product in products:
+        products_data.append({
+            "id": product.id,
+            "name": product.name,
+            "description": product.description,
+            "price": float(product.price / 100),  # Converter de cents para reais
+            "price_cents": product.price,
+            "status": product.status,
+            "product_code": product.product_code,
+            "park_code": product.park_code,
+            "created_at": product.created_at.isoformat()
+        })
+    
+    return {
+        "products": products_data,
+        "total": total,
+        "limit": limit,
+        "offset": offset
+    }
+
+
+@router.put("/api/products/{product_id}")
+@seller_required
+@store_required
+async def update_seller_product(request: Request, product_id: int):
+    """
+    Atualiza um produto da loja
+    """
+    store = request.current_store
+    
+    # Buscar produto
+    product = await Product.filter(id=product_id, store=store).first()
+    
+    if not product:
+        raise HTTPException(status_code=404, detail="Produto não encontrado")
+    
+    # Pegar dados do body
+    body = await request.json()
+    
+    # Atualizar campos permitidos
+    if "name" in body:
+        product.name = body["name"]
+    if "description" in body:
+        product.description = body["description"]
+    if "price" in body:
+        # Converter de reais para cents
+        product.price = int(float(body["price"]) * 100)
+    if "status" in body:
+        product.status = body["status"]
+    
+    await product.save()
+    
+    return {
+        "id": product.id,
+        "name": product.name,
+        "description": product.description,
+        "price": float(product.price / 100),
+        "status": product.status,
+        "message": "Produto atualizado com sucesso"
+    }
+
+
+@router.get("/customers", response_class=HTMLResponse)
+async def seller_admin_customers_page(request: Request):
+    """Página de visualização de clientes do seller"""
+    return templates.TemplateResponse("admin_seller/customers.html", {
+        "request": request
+    })
+
+
+@router.get("/api/customers")
+@seller_required
+@store_required
+async def get_seller_customers(request: Request, limit: int = 100, offset: int = 0):
+    """
+    Retorna lista de clientes da loja do seller
+    """
+    store = request.current_store
+    
+    # Buscar customers da loja
+    customers = await Customer.filter(store=store).order_by('-created_at').limit(limit).offset(offset)
+    
+    # Total de customers
+    total = await Customer.filter(store=store).count()
+    
+    customers_data = []
+    for customer in customers:
+        # Calcular total gasto pelo customer (pedidos pagos)
+        orders = await Order.filter(customer=customer, store=store, status='paid').prefetch_related('orderitem_order')
+        
+        total_spent = 0
+        total_orders = len(orders)
+        
+        for order in orders:
+            items = await order.orderitem_order.all()
+            order_total = sum(item.price * item.amount for item in items)
+            total_spent += order_total
+        
+        customers_data.append({
+            "id": customer.id,
+            "name": customer.name,
+            "email": customer.email,
+            "total_spent": float(total_spent / 100),  # Converter de cents para reais
+            "total_orders": total_orders,
+            "created_at": customer.created_at.isoformat()
+        })
+    
+    return {
+        "customers": customers_data,
+        "total": total,
+        "limit": limit,
+        "offset": offset
+    }
+
+
+@router.get("/api/customers/{customer_id}/orders")
+@seller_required
+@store_required
+async def get_customer_orders(request: Request, customer_id: int):
+    """
+    Retorna pedidos de um cliente específico
+    """
+    store = request.current_store
+    
+    # Verificar se customer pertence à loja
+    customer = await Customer.filter(id=customer_id, store=store).first()
+    
+    if not customer:
+        raise HTTPException(status_code=404, detail="Cliente não encontrado")
+    
+    # Buscar pedidos do customer
+    orders = await Order.filter(customer=customer, store=store).order_by('-created_at').prefetch_related('orderitem_order__product')
+    
+    orders_data = []
+    for order in orders:
+        items = await order.orderitem_order.all().prefetch_related('product')
+        products_str = ", ".join([f"{item.amount}x {item.product.name}" for item in items])
+        order_total = sum(item.price * item.amount for item in items) / 100
+        
+        orders_data.append({
+            "id": order.id,
+            "code": order.code,
+            "status": order.status,
+            "products": products_str,
+            "total": float(order_total),
+            "created_at": order.created_at.isoformat()
+        })
+    
+    return {
+        "customer": {
+            "id": customer.id,
+            "name": customer.name,
+            "email": customer.email
+        },
+        "orders": orders_data
+    }
 
