@@ -80,11 +80,10 @@ async def get_seller_dashboard_stats(request: Request):
     
     total_month = total_month / 100  # Converter de cents para reais
     
-    # Número de customers únicos que compraram (todos os tempos)
+    # Número de customers únicos que compraram (todos os tempos, qualquer status exceto cancelado)
     unique_customers = await Order.filter(
-        store=store,
-        status='paid'
-    ).distinct().values_list('customer_id', flat=True)
+        store=store
+    ).exclude(status='cancelled').distinct().values_list('customer_id', flat=True)
     
     return {
         "total_today": float(total_today),
@@ -316,4 +315,12 @@ async def get_customer_orders(request: Request, customer_id: int):
         },
         "orders": orders_data
     }
+
+
+@router.get("/orders", response_class=HTMLResponse)
+async def seller_admin_orders_page(request: Request):
+    """Página de visualização de pedidos do seller"""
+    return templates.TemplateResponse("admin_seller/orders.html", {
+        "request": request
+    })
 
