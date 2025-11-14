@@ -27,9 +27,24 @@ async def get_park(request: Request, park_code: str):
 
 @router.get("/parks/{park_code}/products")
 @store_required
-async def get_park_products(request: Request, park_code: str):
+async def get_park_products(
+    request: Request, 
+    park_code: str,
+    forDate: str = None,
+    numberDays: int = None,
+    numAdults: int = None,
+    numChildren: int = None,
+    isSpecial: bool = None
+):
     maria_client = MariaApi()
-    products = maria_client.get_park_products(park_code)
+    products = maria_client.get_park_products(
+        park_code=park_code,
+        for_date=forDate,
+        number_days=numberDays,
+        num_adults=numAdults,
+        num_children=numChildren,
+        is_special=isSpecial
+    )
     store = request.current_store
     
     # Aplicar comissões nos preços
@@ -37,20 +52,25 @@ async def get_park_products(request: Request, park_code: str):
     for product in products:
         product_dict = product.model_dump(by_alias=False)
         
-        # Aplicar comissões no preço
-        if product_dict.get('prices') and product_dict['prices'].get('usdbrl'):
-            base_price = Decimal(str(product_dict['prices']['usdbrl']['amount']))
-            
-            # Aplicar comissão da plataforma (5%)
-            price_with_platform = base_price * (1 + PLATFORM_COMMISSION_PERCENTAGE / 100)
-            
-            # Aplicar comissão do seller
+        # Aplicar comissões em todos os preços (adult, child, total)
+        if product_dict.get('prices'):
             seller_commission = Decimal(str(store.commission_percentage))
-            final_price = price_with_platform * (1 + seller_commission / 100)
             
-            # Atualizar preço no produto
-            product_dict['prices']['usdbrl']['amount'] = str(final_price.quantize(Decimal('0.01')))
-            product_dict['original_price'] = str(base_price)
+            # Processar cada tipo de preço
+            for price_type in ['adult', 'child', 'total']:
+                if price_type in product_dict['prices'] and product_dict['prices'][price_type].get('usdbrl'):
+                    base_price = Decimal(str(product_dict['prices'][price_type]['usdbrl']['amount']))
+                    
+                    # Aplicar comissão da plataforma (5%)
+                    price_with_platform = base_price * (1 + PLATFORM_COMMISSION_PERCENTAGE / 100)
+                    
+                    # Aplicar comissão do seller
+                    final_price = price_with_platform * (1 + seller_commission / 100)
+                    
+                    # Atualizar preço
+                    product_dict['prices'][price_type]['usdbrl']['amount'] = str(final_price.quantize(Decimal('0.01')))
+            
+            # Adicionar metadados de comissão (apenas uma vez por produto)
             product_dict['platform_commission'] = str(PLATFORM_COMMISSION_PERCENTAGE)
             product_dict['seller_commission'] = str(seller_commission)
         

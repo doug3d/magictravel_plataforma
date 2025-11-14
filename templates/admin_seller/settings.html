@@ -14,10 +14,10 @@
         
         <form id="settingsForm">
             <div class="form-group">
-                <label for="storeName">Nome da Loja *</label>
+                <label for="storeNameInput">Nome da Loja *</label>
                 <input 
                     type="text" 
-                    id="storeName" 
+                    id="storeNameInput" 
                     required 
                     maxlength="255"
                     placeholder="Digite o nome da loja"
@@ -117,7 +117,7 @@
             currentSettings = data;
             
             // Preencher formulário
-            document.getElementById('storeName').value = data.name;
+            document.getElementById('storeNameInput').value = data.name;
             document.getElementById('commission').value = data.commission_percentage.toFixed(2);
             document.getElementById('storeCredential').textContent = data.credential;
             document.getElementById('createdAt').textContent = formatDate(data.created_at);
@@ -132,7 +132,7 @@
         event.preventDefault();
         
         const saveBtn = document.getElementById('saveBtn');
-        const storeName = document.getElementById('storeName').value.trim();
+        const storeName = document.getElementById('storeNameInput').value.trim();
         const commission = parseFloat(document.getElementById('commission').value);
         
         // Validação
@@ -161,9 +161,9 @@
             currentSettings = result;
             
             // Atualizar nome da loja no sidebar (se mudou)
-            const storeNameEl = document.getElementById('storeName');
-            if (storeNameEl && result.name) {
-                document.querySelector('#storeName').textContent = `🏪 ${result.name}`;
+            const sidebarStoreName = document.querySelector('.sidebar-header #storeName');
+            if (sidebarStoreName && result.name) {
+                sidebarStoreName.textContent = `🏪 ${result.name}`;
             }
             
             showNotification('Configurações salvas com sucesso!', 'success');
