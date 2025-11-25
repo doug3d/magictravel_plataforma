@@ -19,3 +19,11 @@ async def park(request: Request, park_code: str):
     maria_client = MariaApi()
     park = maria_client.get_park(park_code)
     return templates.TemplateResponse("pages/park.html", {"request": request, "park": park})
+
+@router.get("/checkout")
+async def checkout(request: Request):
+    return templates.TemplateResponse("pages/checkout.html", {"request": request})
+
+@router.get("/orders/track/{code}")
+async def track_order(request: Request, code: str):
+    return templates.TemplateResponse("pages/order_details.html", {"request": request})

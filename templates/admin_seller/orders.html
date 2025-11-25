@@ -31,13 +31,13 @@
             <div class="spinner-large"></div>
             <p>Carregando pedidos...</p>
         </div>
-        
+
         <div id="emptyOrders" class="empty-state" style="display: none;">
             <div class="empty-icon">🛒</div>
             <p>Nenhum pedido encontrado</p>
             <small>Os pedidos aparecem aqui quando os clientes finalizam suas compras.</small>
         </div>
-        
+
         <table id="ordersTable" style="display: none;">
             <thead>
                 <tr>
@@ -83,7 +83,7 @@
                         <span id="detailCustomerEmail">-</span>
                     </div>
                 </div>
-                
+
                 <!-- Informações do Pedido -->
                 <div class="detail-section">
                     <h3>Pedido</h3>
@@ -101,7 +101,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- Produtos -->
             <div class="detail-section full-width">
                 <h3>Produtos</h3>
@@ -133,7 +133,7 @@
     // Estado
     let currentFilter = '';
     let allOrders = [];
-    
+
     // Carregar pedidos
     async function loadOrders() {
         const loadingOrders = document.getElementById('loadingOrders');
@@ -141,36 +141,39 @@
         const ordersTable = document.getElementById('ordersTable');
         const ordersTableBody = document.getElementById('ordersTableBody');
         const totalOrdersEl = document.getElementById('totalOrders');
-        
+
         try {
             loadingOrders.style.display = 'flex';
             emptyOrders.style.display = 'none';
             ordersTable.style.display = 'none';
-            
-            const url = currentFilter 
+
+            const url = currentFilter
                 ? `/seller/admin/api/orders?limit=1000&status=${currentFilter}`
                 : '/seller/admin/api/orders?limit=1000';
-            
+
             const data = await window.adminApi.get(url);
-            
+
             allOrders = data.orders || [];
-            
+
             loadingOrders.style.display = 'none';
-            
+
             // Atualizar contador
             totalOrdersEl.textContent = `${allOrders.length} pedido${allOrders.length !== 1 ? 's' : ''}`;
-            
+
             if (allOrders.length === 0) {
                 emptyOrders.style.display = 'flex';
                 return;
             }
-            
+
             // Renderizar pedidos
             ordersTableBody.innerHTML = allOrders.map(order => `
                 <tr>
                     <td>#${order.id}</td>
-                    <td><code>${order.code || '-'}</code></td>
-                    <td>${order.customer_email}</td>
+                    <td><code>${order.code ? order.code.substring(0, 8) : '-'}</code></td>
+                    <td>
+                        <div>${order.customer_name || 'N/A'}</div>
+                        <small style="color: #718096;">${order.customer_email}</small>
+                    </td>
                     <td><span class="status-badge status-${order.status}">${getStatusText(order.status)}</span></td>
                     <td class="products-cell">${order.products}</td>
                     <td class="total-cell">${formatCurrency(order.total)}</td>
@@ -182,7 +185,7 @@
                     </td>
                 </tr>
             `).join('');
-            
+
             ordersTable.style.display = 'table';
         } catch (error) {
             console.error('Erro ao carregar pedidos:', error);
@@ -190,28 +193,28 @@
             emptyOrders.style.display = 'flex';
         }
     }
-    
+
     // Ver detalhes do pedido
     async function viewOrderDetails(orderId) {
         const order = allOrders.find(o => o.id === orderId);
-        
+
         if (!order) {
             alert('Pedido não encontrado');
             return;
         }
-        
+
         // Preencher informações
         document.getElementById('orderInfo').textContent = `Pedido #${order.id}`;
         document.getElementById('detailCustomerName').textContent = order.customer_name || '-';
         document.getElementById('detailCustomerEmail').textContent = order.customer_email;
         document.getElementById('detailOrderCode').textContent = order.code || '-';
-        
+
         const statusBadge = `<span class="status-badge status-${order.status}">${getStatusText(order.status)}</span>`;
         document.getElementById('detailOrderStatus').innerHTML = statusBadge;
-        
+
         document.getElementById('detailOrderDate').textContent = formatDate(order.created_at);
         document.getElementById('detailOrderTotal').textContent = formatCurrency(order.total);
-        
+
         // Parse produtos (vem como string "1x PRODUTO 1, 3x Produto 2")
         const productsStr = order.products;
         const productsHtml = productsStr.split(', ').map(prodStr => {
@@ -231,18 +234,18 @@
             }
             return '';
         }).join('');
-        
+
         document.getElementById('detailProductsBody').innerHTML = productsHtml || '<tr><td colspan="4">Sem detalhes de produtos</td></tr>';
-        
+
         // Mostrar modal
         document.getElementById('detailsModal').style.display = 'block';
     }
-    
+
     // Fechar modal
     function closeModal() {
         document.getElementById('detailsModal').style.display = 'none';
     }
-    
+
     // Formatação
     function formatCurrency(value) {
         return new Intl.NumberFormat('pt-BR', {
@@ -250,7 +253,7 @@
             currency: 'BRL'
         }).format(value);
     }
-    
+
     function formatDate(dateString) {
         const date = new Date(dateString);
         return new Intl.DateTimeFormat('pt-BR', {
@@ -261,7 +264,7 @@
             minute: '2-digit'
         }).format(date);
     }
-    
+
     function getStatusText(status) {
         const statusMap = {
             'created': 'Criado',
@@ -272,17 +275,17 @@
         };
         return statusMap[status] || status;
     }
-    
+
     // Event listeners
     document.getElementById('statusFilter').addEventListener('change', (e) => {
         currentFilter = e.target.value;
         loadOrders();
     });
-    
+
     document.getElementById('refreshBtn').addEventListener('click', loadOrders);
     document.getElementById('modalClose').addEventListener('click', closeModal);
     document.getElementById('modalOverlay').addEventListener('click', closeModal);
-    
+
     // Aguardar auth estar pronta
     window.addEventListener('adminAuthReady', () => {
         loadOrders();
@@ -300,13 +303,13 @@
         border-radius: 12px;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
-    
+
     .filters {
         display: flex;
         gap: 1rem;
         align-items: center;
     }
-    
+
     .filter-select {
         padding: 0.625rem 1rem;
         border: 2px solid #e2e8f0;
@@ -314,24 +317,24 @@
         font-size: 0.9rem;
         cursor: pointer;
     }
-    
+
     .stats-info {
         color: #718096;
         font-weight: 500;
     }
-    
+
     .products-cell {
         max-width: 300px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
     }
-    
+
     .total-cell {
         font-weight: 600;
         color: #48bb78;
     }
-    
+
     code {
         background: #f7fafc;
         padding: 0.25rem 0.5rem;
@@ -339,7 +342,7 @@
         font-size: 0.85rem;
         color: #667eea;
     }
-    
+
     .btn-action {
         background: transparent;
         border: none;
@@ -348,11 +351,11 @@
         padding: 0.5rem;
         transition: transform 0.2s;
     }
-    
+
     .btn-action:hover {
         transform: scale(1.2);
     }
-    
+
     /* Modal */
     .modal {
         position: fixed;
@@ -362,7 +365,7 @@
         bottom: 0;
         z-index: 1000;
     }
-    
+
     .modal-overlay {
         position: absolute;
         top: 0;
@@ -371,7 +374,7 @@
         bottom: 0;
         background: rgba(0, 0, 0, 0.5);
     }
-    
+
     .modal-content {
         position: relative;
         background: white;
@@ -382,11 +385,11 @@
         max-height: 90vh;
         overflow-y: auto;
     }
-    
+
     .modal-large {
         max-width: 1000px;
     }
-    
+
     .modal-header {
         display: flex;
         justify-content: space-between;
@@ -394,19 +397,19 @@
         padding: 1.5rem;
         border-bottom: 1px solid #e2e8f0;
     }
-    
+
     .modal-header h2 {
         font-size: 1.5rem;
         color: #2d3748;
         margin-bottom: 0.25rem;
     }
-    
+
     .order-info {
         color: #718096;
         font-size: 0.9rem;
         margin: 0;
     }
-    
+
     .modal-close {
         background: transparent;
         border: none;
@@ -416,32 +419,32 @@
         padding: 0.5rem;
         transition: color 0.2s;
     }
-    
+
     .modal-close:hover {
         color: #f56565;
     }
-    
+
     .modal-body {
         padding: 1.5rem;
     }
-    
+
     .order-details-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 2rem;
         margin-bottom: 2rem;
     }
-    
+
     .detail-section {
         background: #f7fafc;
         padding: 1.25rem;
         border-radius: 8px;
     }
-    
+
     .detail-section.full-width {
         grid-column: 1 / -1;
     }
-    
+
     .detail-section h3 {
         font-size: 1.1rem;
         color: #2d3748;
@@ -449,28 +452,28 @@
         padding-bottom: 0.75rem;
         border-bottom: 2px solid #e2e8f0;
     }
-    
+
     .detail-item {
         display: flex;
         justify-content: space-between;
         margin-bottom: 0.75rem;
     }
-    
+
     .detail-label {
         color: #718096;
         font-weight: 500;
     }
-    
+
     .products-detail-table {
         width: 100%;
         border-collapse: collapse;
         margin-bottom: 1rem;
     }
-    
+
     .products-detail-table thead {
         background: white;
     }
-    
+
     .products-detail-table th {
         padding: 0.75rem;
         text-align: left;
@@ -479,14 +482,14 @@
         color: #2d3748;
         border-bottom: 2px solid #e2e8f0;
     }
-    
+
     .products-detail-table td {
         padding: 0.75rem;
         font-size: 0.9rem;
         color: #2d3748;
         border-bottom: 1px solid #e2e8f0;
     }
-    
+
     .order-total {
         display: flex;
         justify-content: flex-end;
@@ -496,7 +499,7 @@
         border-top: 2px solid #e2e8f0;
         font-size: 1.1rem;
     }
-    
+
     .total-value {
         color: #48bb78;
         font-weight: 700;
@@ -504,4 +507,3 @@
     }
 </style>
 {% endblock %}
-

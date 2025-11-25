@@ -120,7 +120,9 @@ async def get_seller_orders(request: Request, limit: int = 50):
         
         orders_data.append({
             "id": order.id,
-            "customer_email": customer_email,
+            "code": order.code,
+            "customer_name": order.customer_name,
+            "customer_email": order.customer_email,
             "status": order.status,
             "products": products_str,
             "total": float(order_total),

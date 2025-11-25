@@ -1,0 +1,293 @@
+{% extends "base.html" %}
+
+{% block title %}Detalhes do Pedido - Magic Marketplace{% endblock %}
+
+{% block styles %}
+<style>
+    .order-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+
+    .order-header {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        color: white;
+        padding: 2rem;
+        text-align: center;
+    }
+
+    .order-status-badge {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 20px;
+        font-weight: 600;
+        margin-top: 1rem;
+        backdrop-filter: blur(4px);
+    }
+
+    .order-body {
+        padding: 2rem;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        margin-bottom: 2rem;
+        padding-bottom: 2rem;
+        border-bottom: 1px solid #eee;
+    }
+
+    .info-section h3 {
+        color: var(--dark);
+        margin-bottom: 1rem;
+        font-size: 1.1rem;
+    }
+
+    .info-item {
+        margin-bottom: 0.5rem;
+        color: var(--gray);
+    }
+
+    .info-label {
+        font-weight: 600;
+        color: var(--dark);
+        margin-right: 0.5rem;
+    }
+
+    .order-items {
+        margin-bottom: 2rem;
+    }
+
+    .order-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 1rem 0;
+        border-bottom: 1px solid #eee;
+    }
+
+    .item-total {
+        font-weight: 600;
+    }
+
+    .order-total {
+        display: flex;
+        justify-content: space-between;
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 2px solid #eee;
+        color: var(--primary-dark);
+    }
+
+    .actions {
+        margin-top: 2rem;
+        text-align: center;
+    }
+
+    .btn-pay {
+        background: #48bb78;
+        color: white;
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 8px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.2s, background 0.2s;
+    }
+
+    .btn-pay:hover {
+        transform: translateY(-2px);
+        background: #38a169;
+    }
+
+    .status-created {
+        background: #ecc94b;
+        color: #744210;
+    }
+
+    .status-waiting_payment {
+        background: #4299e1;
+        color: white;
+    }
+
+    .status-paid {
+        background: #48bb78;
+        color: white;
+    }
+
+    .status-cancelled {
+        background: #f56565;
+        color: white;
+    }
+
+    @media (max-width: 600px) {
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="loading" class="loading" style="display: block;">
+    <div class="spinner"></div>
+    <p>Carregando pedido...</p>
+</div>
+
+<div id="orderContent" class="order-container" style="display: none;">
+    <div class="order-header">
+        <h1 id="orderTitle">Pedido #...</h1>
+        <div id="orderStatus" class="order-status-badge">Carregando...</div>
+    </div>
+
+    <div class="order-body">
+        <div class="info-grid">
+            <div class="info-section">
+                <h3>Cliente</h3>
+                <div class="info-item">
+                    <span class="info-label">Nome:</span>
+                    <span id="customerName">-</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Email:</span>
+                    <span id="customerEmail">-</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Documento:</span>
+                    <span id="customerDocument">-</span>
+                </div>
+            </div>
+
+            <div class="info-section">
+                <h3>Entrega</h3>
+                <div class="info-item">
+                    <span class="info-label">Endereço:</span>
+                    <span id="addressStreet">-</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Cidade/UF:</span>
+                    <span id="addressCityState">-</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">CEP:</span>
+                    <span id="addressZip">-</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="order-items">
+            <h3>Itens do Pedido</h3>
+            <div id="itemsList">
+                <!-- Items injected here -->
+            </div>
+
+            <div class="order-total">
+                <span>Total</span>
+                <span id="orderTotal">R$ 0,00</span>
+            </div>
+        </div>
+
+        <div id="paymentSection" class="actions" style="display: none;">
+            <button id="payBtn" class="btn-pay">💳 Pagar Agora (Simulação)</button>
+            <p style="margin-top: 1rem; color: var(--gray); font-size: 0.9rem;">
+                Ambiente de teste: O pagamento será aprovado automaticamente.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', async () => {
+        // Pegar código da URL (/orders/track/{code})
+        const pathParts = window.location.pathname.split('/');
+        const orderCode = pathParts[pathParts.length - 1];
+
+        const loading = document.getElementById('loading');
+        const content = document.getElementById('orderContent');
+
+        try {
+            const order = await window.api.get(`/orders/${orderCode}`);
+
+            // Renderizar dados
+            document.getElementById('orderTitle').textContent = `Pedido #${order.code.substring(0, 8)}`;
+
+            const statusMap = {
+                'created': 'Aguardando Pagamento',
+                'waiting_payment': 'Aguardando Pagamento',
+                'paid': 'Pago / Aprovado',
+                'delivered': 'Entregue',
+                'cancelled': 'Cancelado'
+            };
+
+            const statusEl = document.getElementById('orderStatus');
+            statusEl.textContent = statusMap[order.status] || order.status;
+            statusEl.className = `order-status-badge status-${order.status}`;
+
+            // Cliente
+            document.getElementById('customerName').textContent = order.customer_name || 'N/A';
+            document.getElementById('customerEmail').textContent = order.customer_email || 'N/A';
+            document.getElementById('customerDocument').textContent = order.customer_document || 'N/A';
+
+            // Endereço
+            document.getElementById('addressStreet').textContent = `${order.address_street || ''}, ${order.address_number || ''}`;
+            document.getElementById('addressCityState').textContent = `${order.address_city || ''} - ${order.address_state || ''}`;
+            document.getElementById('addressZip').textContent = order.address_zip || '';
+
+            // Itens
+            document.getElementById('itemsList').innerHTML = order.items.map(item => `
+                <div class="order-item">
+                    <div>
+                        <div>${item.product_name}</div>
+                        <small>x${item.amount}</small>
+                    </div>
+                    <div class="item-total">R$ ${(item.price * item.amount / 100).toFixed(2).replace('.', ',')}</div>
+                </div>
+            `).join('');
+
+            // Total
+            const total = order.items.reduce((sum, item) => sum + (item.price * item.amount), 0);
+            document.getElementById('orderTotal').textContent = `R$ ${(total / 100).toFixed(2).replace('.', ',')}`;
+
+            // Botão de Pagamento
+            if (order.status === 'created' || order.status === 'waiting_payment') {
+                document.getElementById('paymentSection').style.display = 'block';
+
+                document.getElementById('payBtn').onclick = async () => {
+                    if (!confirm('Confirmar pagamento simulado?')) return;
+
+                    try {
+                        await window.api.post(`/orders/${orderCode}/pay`);
+                        alert('Pagamento aprovado com sucesso!');
+                        window.location.reload();
+                    } catch (error) {
+                        console.error('Erro no pagamento:', error);
+                        alert('Erro ao processar pagamento.');
+                    }
+                };
+            }
+
+            loading.style.display = 'none';
+            content.style.display = 'block';
+
+        } catch (error) {
+            console.error('Erro ao carregar pedido:', error);
+            loading.innerHTML = `
+                <div class="empty-state">
+                    <h3>Pedido não encontrado</h3>
+                    <p>Verifique o código e tente novamente.</p>
+                </div>
+            `;
+        }
+    });
+</script>
+{% endblock %}

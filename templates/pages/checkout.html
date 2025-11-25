@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+
+{% block title %}Checkout - Magic Marketplace{% endblock %}
+
+{% block styles %}
+<style>
+    .checkout-container {
+        display: grid;
+        grid-template-columns: 1fr 350px;
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+
+    .checkout-form-section {
+        background: white;
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px var(--shadow);
+    }
+
+    .checkout-summary {
+        background: white;
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px var(--shadow);
+        height: fit-content;
+        position: sticky;
+        top: 2rem;
+    }
+
+    h2 {
+        margin-bottom: 1.5rem;
+        color: var(--dark);
+        font-size: 1.5rem;
+    }
+
+    .form-section-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid #eee;
+        color: var(--primary);
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    .summary-item {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #eee;
+    }
+
+    .summary-total {
+        display: flex;
+        justify-content: space-between;
+        font-weight: 700;
+        font-size: 1.2rem;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 2px solid #eee;
+    }
+
+    .btn-place-order {
+        width: 100%;
+        padding: 1rem;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        cursor: pointer;
+        margin-top: 1.5rem;
+        transition: transform 0.2s;
+    }
+
+    .btn-place-order:hover {
+        transform: translateY(-2px);
+    }
+
+    @media (max-width: 768px) {
+        .checkout-container {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="checkout-container">
+    <div class="checkout-form-section">
+        <h2>Finalizar Pedido</h2>
+
+        <form id="checkoutForm">
+            <div class="form-section-title">Dados Pessoais</div>
+            <div class="form-group">
+                <label for="customerName">Nome Completo</label>
+                <input type="text" id="customerName" name="customer_name" required>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="customerEmail">E-mail</label>
+                    <input type="email" id="customerEmail" name="customer_email" required>
+                </div>
+                <div class="form-group">
+                    <label for="customerPhone">Telefone</label>
+                    <input type="tel" id="customerPhone" name="customer_phone" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="customerDocument">CPF/Documento</label>
+                <input type="text" id="customerDocument" name="customer_document" required>
+            </div>
+
+            <div class="form-section-title" style="margin-top: 2rem;">Endereço de Cobrança</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="addressZip">CEP</label>
+                    <input type="text" id="addressZip" name="address_zip" required>
+                </div>
+                <div class="form-group">
+                    <label for="addressState">Estado</label>
+                    <input type="text" id="addressState" name="address_state" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="addressCity">Cidade</label>
+                    <input type="text" id="addressCity" name="address_city" required>
+                </div>
+                <div class="form-group">
+                    <label for="addressNumber">Número</label>
+                    <input type="text" id="addressNumber" name="address_number" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="addressStreet">Rua/Avenida</label>
+                <input type="text" id="addressStreet" name="address_street" required>
+            </div>
+        </form>
+    </div>
+
+    <div class="checkout-summary">
+        <h3>Resumo do Pedido</h3>
+        <div id="checkoutItems">
+            <!-- Items will be loaded here -->
+            <p>Carregando itens...</p>
+        </div>
+
+        <div class="summary-total">
+            <span>Total</span>
+            <span id="checkoutTotal">R$ 0,00</span>
+        </div>
+
+        <button type="submit" form="checkoutForm" class="btn-place-order" id="placeOrderBtn">
+            Confirmar Pedido
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', async () => {
+        const checkoutItems = document.getElementById('checkoutItems');
+        const checkoutTotal = document.getElementById('checkoutTotal');
+        const checkoutForm = document.getElementById('checkoutForm');
+
+        // Load cart items
+        try {
+            const cart = await window.api.get('/carts/current');
+
+            if (!cart || cart.cart_empty || !cart.items.length) {
+                window.location.href = '/';
+                return;
+            }
+
+            checkoutItems.innerHTML = cart.items.map(item => `
+                <div class="summary-item">
+                    <div>
+                        <div>${item.product_name}</div>
+                        <small>x${item.amount}</small>
+                    </div>
+                    <div>R$ ${(item.price * item.amount / 100).toFixed(2).replace('.', ',')}</div>
+                </div>
+            `).join('');
+
+            const total = cart.items.reduce((sum, item) => sum + (item.price * item.amount), 0);
+            checkoutTotal.textContent = `R$ ${(total / 100).toFixed(2).replace('.', ',')}`;
+
+        } catch (error) {
+            console.error('Error loading cart:', error);
+            alert('Erro ao carregar carrinho. Redirecionando para a home.');
+            window.location.href = '/';
+        }
+
+        // Handle form submission
+        checkoutForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const btn = document.getElementById('placeOrderBtn');
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = 'Processando...';
+
+            try {
+                const formData = new FormData(checkoutForm);
+                const data = Object.fromEntries(formData.entries());
+
+                const order = await window.api.post('/orders/', data);
+
+                // Redirect to tracking page
+                window.location.href = `/orders/track/${order.code}`;
+
+            } catch (error) {
+                console.error('Error placing order:', error);
+                alert('Erro ao realizar pedido. Tente novamente.');
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        });
+    });
+</script>
+{% endblock %}

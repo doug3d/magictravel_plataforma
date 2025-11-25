@@ -94,6 +94,20 @@ class Order(Model):
     status = fields.CharField(max_length=255, choices=ORDER_STATUS, default='created')
     customer = fields.ForeignKeyField("models.Customer", related_name='order_customer')
     code = fields.CharField(max_length=255)
+    
+    # Snapshot of customer details
+    customer_name = fields.CharField(max_length=255, null=True)
+    customer_email = fields.CharField(max_length=255, null=True)
+    customer_document = fields.CharField(max_length=255, null=True)
+    customer_phone = fields.CharField(max_length=255, null=True)
+    
+    # Address
+    address_street = fields.CharField(max_length=255, null=True)
+    address_number = fields.CharField(max_length=255, null=True)
+    address_city = fields.CharField(max_length=255, null=True)
+    address_state = fields.CharField(max_length=255, null=True)
+    address_zip = fields.CharField(max_length=255, null=True)
+
     created_at = fields.DatetimeField(auto_now_add=True)
 
 class OrderItem(Model):

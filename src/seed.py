@@ -45,7 +45,8 @@ async def seed_database():
         print(f"✓ Loja '{store_name}' já existe (ID: {store.id})")
         print(f"  Credential: {store.credential}")
     except DoesNotExist:
-        store_credential = str(uuid.uuid4().hex)[:250]
+        # Use fixed credential to match frontend mock
+        store_credential = "6059a3f072994bfc806a18cb098b265e"
         store = await Store.create(
             seller=admin_seller,
             name=store_name,
