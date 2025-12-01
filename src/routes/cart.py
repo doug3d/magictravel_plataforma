@@ -44,6 +44,8 @@ async def store(request: Request, body: CartItemSchema):
         cart_id=cart.id,
         product_id=body.product_id,
         amount=body.amount,
+        price=body.price,
+        attributes=body.attributes
     )
 
     return await get_cart_items(request.current_store.id, request.current_user.id)

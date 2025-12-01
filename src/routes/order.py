@@ -45,7 +45,13 @@ async def store(request: Request, body: OrderCreate):
     )
 
     for item in cart["items"]:
-        await OrderItem.create(order_id=order.id, product_id=item["product_id"], amount=item["amount"], price=item["price"])
+        await OrderItem.create(
+            order_id=order.id, 
+            product_id=item["product_id"], 
+            amount=item["amount"], 
+            price=item["price"],
+            attributes=item.get("attributes", {})
+        )
 
     return await get_order_details(order.id)
 

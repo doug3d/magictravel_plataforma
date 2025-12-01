@@ -107,7 +107,7 @@ class CartManager {
      * @param {string} parkCode - Código do parque na Maria API
      * @param {number} amount - Quantidade
      */
-    async addProduct(productCode, parkCode, amount = 1) {
+    async addProduct(productCode, parkCode, amount = 1, price = 0, attributes = {}) {
         try {
             // 1. Converter código externo para ID interno
             const { product_id } = await window.api.get(
@@ -117,7 +117,9 @@ class CartManager {
             // 2. Adicionar ao carrinho
             this.cartData = await window.api.post('/carts/', {
                 product_id: product_id,
-                amount: amount
+                amount: amount,
+                price: price,
+                attributes: attributes
             });
 
             this.renderCart();

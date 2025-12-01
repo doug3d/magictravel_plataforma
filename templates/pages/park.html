@@ -11,18 +11,18 @@
         border-radius: 12px;
         margin-bottom: 2rem;
     }
-    
+
     .park-description {
         opacity: 0.95;
         margin: 1rem 0;
         line-height: 1.6;
     }
-    
+
     .park-location {
         font-size: 0.95rem;
         opacity: 0.9;
     }
-    
+
     .filters-card {
         background: white;
         padding: 2rem;
@@ -30,30 +30,30 @@
         box-shadow: 0 2px 8px var(--shadow);
         margin-bottom: 2rem;
     }
-    
+
     .filters-card h3 {
         margin-top: 0;
         margin-bottom: 0.5rem;
         color: var(--dark);
     }
-    
+
     .filters-subtitle {
         color: var(--gray);
         margin-bottom: 1.5rem;
         font-size: 0.95rem;
     }
-    
+
     .required {
         color: var(--danger);
     }
-    
+
     .filter-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
         gap: 1rem;
         margin-bottom: 1.5rem;
     }
-    
+
     .btn-filter {
         width: 100%;
         padding: 1rem;
@@ -66,22 +66,22 @@
         cursor: pointer;
         transition: transform 0.2s, box-shadow 0.2s;
     }
-    
+
     .btn-filter:hover {
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
     }
-    
+
     .btn-filter:active {
         transform: translateY(0);
     }
-    
+
     .btn-filter:disabled {
         opacity: 0.6;
         cursor: not-allowed;
         transform: none;
     }
-    
+
     .empty-state-initial {
         text-align: center;
         padding: 4rem 2rem;
@@ -89,29 +89,29 @@
         border-radius: 12px;
         box-shadow: 0 2px 8px var(--shadow);
     }
-    
+
     .empty-icon {
         font-size: 4rem;
         margin-bottom: 1rem;
     }
-    
+
     .empty-state-initial h3 {
         color: var(--dark);
         margin-bottom: 0.5rem;
     }
-    
+
     .empty-state-initial p {
         color: var(--gray);
         max-width: 500px;
         margin: 0 auto;
     }
-    
+
     .products-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
         gap: 1.5rem;
     }
-    
+
     .product-card {
         background: white;
         border-radius: 12px;
@@ -121,19 +121,19 @@
         display: flex;
         flex-direction: column;
     }
-    
+
     .product-card:hover {
         transform: translateY(-4px);
         box-shadow: 0 8px 16px var(--shadow-hover);
     }
-    
+
     .product-header {
         display: flex;
         justify-content: space-between;
         align-items: start;
         margin-bottom: 1rem;
     }
-    
+
     .product-title {
         font-size: 1.1rem;
         font-weight: 700;
@@ -141,24 +141,24 @@
         margin: 0;
         flex: 1;
     }
-    
+
     .product-badges {
         display: flex;
         flex-wrap: wrap;
         gap: 0.5rem;
         margin-bottom: 1rem;
     }
-    
+
     .badge-addon {
         background: #f3e5f5;
         color: #7b1fa2;
     }
-    
+
     .product-info {
         margin-bottom: 1rem;
         flex: 1;
     }
-    
+
     .info-row {
         display: flex;
         align-items: center;
@@ -166,11 +166,11 @@
         color: var(--gray);
         font-size: 0.9rem;
     }
-    
+
     .info-row span:first-child {
         margin-right: 0.5rem;
     }
-    
+
     .product-price {
         background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
         color: white;
@@ -179,25 +179,25 @@
         text-align: center;
         margin-bottom: 1rem;
     }
-    
+
     .price-label {
         font-size: 0.8rem;
         opacity: 0.9;
         margin-bottom: 0.25rem;
     }
-    
+
     .price-value {
         font-size: 2rem;
         font-weight: 700;
         margin: 0;
     }
-    
+
     .price-usd {
         font-size: 0.85rem;
         opacity: 0.9;
         margin-top: 0.25rem;
     }
-    
+
     .btn-add-cart {
         width: 100%;
         padding: 0.875rem;
@@ -209,16 +209,16 @@
         cursor: pointer;
         transition: background 0.2s;
     }
-    
+
     .btn-add-cart:hover {
         background: var(--secondary-dark);
     }
-    
+
     @media (max-width: 768px) {
         .products-grid {
             grid-template-columns: 1fr;
         }
-        
+
         .filter-grid {
             grid-template-columns: 1fr;
         }
@@ -273,14 +273,14 @@
 
 {% block scripts %}
 <script>
-    (async()=>{
+    (async () => {
         const getProducts = async (forDate, numberDays, numAdults, numChildren) => {
             const url = new URL('/maria/parks/{{park.code}}/products', window.location.origin);
             url.searchParams.append('forDate', forDate);
             if (numberDays) url.searchParams.append('numberDays', numberDays);
             url.searchParams.append('numAdults', numAdults);
             url.searchParams.append('numChildren', numChildren);
-            
+
             const response = await fetch(url, {
                 headers: {
                     'Store-Credential': '6059a3f072994bfc806a18cb098b265e'
@@ -288,7 +288,7 @@
             });
             return response.json();
         }
-        
+
         const formatPrice = (amount) => {
             return parseFloat(amount).toLocaleString('pt-BR', {
                 minimumFractionDigits: 2,
@@ -315,16 +315,16 @@
 
             return parkNames[standardizedCode];
         }
-        
+
         const getDaysText = (days) => {
             if (days === 0) return 'Uso único';
             if (days === 1) return '1 dia';
             return `${days} dias`;
         }
-        
+
         const renderProducts = (products) => {
             const productsContainer = document.querySelector('.products-grid');
-            
+
             if (!products || products.length === 0) {
                 productsContainer.innerHTML = `
                     <div class="empty-state" style="grid-column: 1/-1;">
@@ -337,10 +337,10 @@
                 `;
                 return;
             }
-            
+
             productsContainer.innerHTML = products.map((product) => {
                 const badges = [];
-                
+
                 // Badge do tipo de produto
                 const productKind = product.extensions.product_kind;
                 if (productKind === 'admission') {
@@ -348,25 +348,25 @@
                 } else if (productKind === 'addon') {
                     badges.push('<span class="badge badge-addon">Adicional</span>');
                 }
-                
+
                 // Badge multi-dias
                 if (product.is_multi_days) {
                     badges.push('<span class="badge badge-success">Multi-dias</span>');
                 }
-                
+
                 // Badge park to park
                 if (product.is_park_to_park) {
                     badges.push('<span class="badge badge-warning">Park-to-Park</span>');
                 }
-                
+
                 // Badge dated
                 if (product.is_dated) {
                     badges.push('<span class="badge badge-primary">Data Específica</span>');
                 }
-                
+
                 const days = product.extensions.number_days;
                 const parks = product.extensions.number_parks;
-                
+
                 return `
                     <div class="product-card" data-product-id="${product.code}">
                         <div class="product-header">
@@ -413,7 +413,12 @@
                             </div>
                         </div>
                         
-                        <button class="btn-add-cart" onclick="addToCart('${product.code}')">
+                        <button class="btn-add-cart" onclick='addToCart("${product.code}", ${product.prices.total.usdbrl.amount}, ${JSON.stringify({
+                    date: document.querySelector("#forDate").value,
+                    adults: document.querySelector("#numAdults").value,
+                    children: document.querySelector("#numChildren").value,
+                    days: product.extensions.number_days
+                })})'>
                             🛒 Adicionar ao Carrinho
                         </button>
                     </div>
@@ -425,30 +430,30 @@
         const loading = document.querySelector('#loading');
         const emptyState = document.querySelector('#emptyState');
         const productsGrid = document.querySelector('.products-grid');
-        
+
         filterButton.addEventListener('click', async () => {
             const forDate = document.querySelector('#forDate').value;
             const numberDays = document.querySelector('#numberDays').value || '';
             const numAdults = document.querySelector('#numAdults').value;
             const numChildren = document.querySelector('#numChildren').value;
-            
+
             // Validação
             if (!forDate) {
                 alert('Por favor, selecione a data da visita');
                 return;
             }
-            
+
             if (!numAdults || numAdults < 1) {
                 alert('Por favor, informe o número de adultos (mínimo 1)');
                 return;
             }
-            
+
             // Esconder empty state e mostrar loading
             emptyState.style.display = 'none';
             loading.style.display = 'block';
             productsGrid.innerHTML = '';
             filterButton.disabled = true;
-            
+
             try {
                 const products = await getProducts(forDate, numberDays, numAdults, numChildren);
                 renderProducts(products);
@@ -465,21 +470,24 @@
                 filterButton.disabled = false;
             }
         });
-        
+
         // Função para adicionar ao carrinho
-        window.addToCart = async (productCode) => {
+        window.addToCart = async (productCode, price, attributes) => {
             const parkCode = '{{ park.code }}';
-            
+
             // Verificar se o cartManager está disponível
             if (!window.cartManager) {
                 alert('Erro: Sistema de carrinho não carregado');
                 return;
             }
-            
+
+            // Converter preço para centavos
+            const priceCents = Math.round(price * 100);
+
             // Adicionar produto ao carrinho (amount padrão = 1)
-            await window.cartManager.addProduct(productCode, parkCode, 1);
+            await window.cartManager.addProduct(productCode, parkCode, 1, priceCents, attributes);
         }
-        
+
         // Definir data mínima (hoje)
         const today = new Date().toISOString().split('T')[0];
         document.querySelector('#forDate').setAttribute('min', today);

@@ -86,6 +86,8 @@ class CartItem(Model):
     cart = fields.ForeignKeyField("models.Cart", related_name='cartitem_cart')
     product = fields.ForeignKeyField("models.Product", related_name='product_cartitem')
     amount = fields.IntField(default=1)
+    price = fields.IntField(default=0)  # Price in cents at the time of addition
+    attributes = fields.JSONField(default={})  # Stores date, adults, children, etc.
     created_at = fields.DatetimeField(auto_now_add=True)
 
 class Order(Model):
@@ -116,3 +118,4 @@ class OrderItem(Model):
     product = fields.ForeignKeyField("models.Product", related_name='product_orderitem')
     price = fields.IntField()
     amount = fields.IntField(default=1)
+    attributes = fields.JSONField(default={})  # Snapshot of cart item attributes

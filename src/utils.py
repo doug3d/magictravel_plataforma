@@ -55,8 +55,9 @@ async def get_cart_items(store_id: int, customer_id: int):
         items.append({
             'product_id': product.id,
             'product_name': product.name,
-            'price': product.price,
+            'price': item.price,  # Use stored price
             'amount': item.amount,
+            'attributes': item.attributes
         })
 
     return {
@@ -77,10 +78,11 @@ async def get_order_details(order_id: int):
         items.append({
             'product_id': product.id,
             'product_name': product.name,
-            'price': product.price,
+            'price': item.price,
             'amount': item.amount,
+            'attributes': item.attributes
         })
-        total_price += product.price * item.amount
+        total_price += item.price * item.amount
 
     return {
         'status': order.status,
